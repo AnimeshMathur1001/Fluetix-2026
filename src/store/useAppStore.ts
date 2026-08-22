@@ -14,7 +14,6 @@ import {
   ProjectFileError,
   type ProjectFile,
 } from '../lib/projectFile';
-import { clearAutosave, loadAutosave, saveAutosave } from '../lib/autosave';
 import type {
   Axis,
   BlockCheckResult,
@@ -114,7 +113,7 @@ export interface AppState {
   fluidCatalog: FluidListEntry[];
   /** User-saved materials — a snapshot of the values at save time, not a live
    *  equation of state, so they work identically with or without a backend
-   *  and travel with the project file / autosave. */
+   *  and travel with the project file. */
   customFluids: Record<string, CustomFluid>;
   customSolids: Record<string, CustomSolid>;
   nuCorrection: NuCorrectionParams;
@@ -476,7 +475,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   /** Snapshots the given stream's current ρ/μ/cₚ/k under a new name — not a live
    *  equation of state, so it works identically offline and travels with the
-   *  project file / autosave (see lib/projectFile.ts). */
+   *  project file (see lib/projectFile.ts). */
   saveCustomFluid: (key, name) => {
     const s = get();
     const label = name.trim();
@@ -554,9 +553,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       s.flash(e instanceof ProjectFileError ? e.message : 'Could not read project file');
       return;
     }
-    // A deliberate "load someone else's file" always starts fresh at Geometry —
-    // unlike the autosave restore (see lib/autosave.ts), which keeps the step
-    // the user was actually on since that's the same browser session continuing.
+    // Loading someone else's file always starts fresh at Geometry, regardless of
+    // what step this project file's own case last left off on.
     set({ ...projectFileToPatch(project), step: 0 } as unknown as Partial<AppState>);
     s.flash('Project loaded — re-run Mesh & Solve to get results');
   },
@@ -569,10 +567,9 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   toggleFocusMode: () => set((s) => ({ focusMode: !s.focusMode })),
 
-  /** Clears the autosaved session and reloads to genuinely-fresh defaults — a full page
-   *  reload rather than resetting fields in place so there's no risk of missing one. */
+  /** Reloads to genuinely-fresh defaults — a full page reload rather than resetting
+   *  fields in place so there's no risk of missing one. */
   startNewCase: () => {
-    clearAutosave();
     window.location.reload();
   },
 
@@ -585,18 +582,3 @@ export const useAppStore = create<AppState>((set, get) => ({
     s.flash('Case duplicated');
   },
 }));
-
-// Restore the last local session (if any) before the first render, so there's no
-// flash of blank defaults — see lib/autosave.ts. Purely a local-machine convenience
-// on top of the real, explicit Save/Load-to-disk project file.
-const restored = loadAutosave();
-if (restored) {
-  useAppStore.setState(restored as unknown as Partial<AppState>);
-  useAppStore.getState().flash('Restored your last session from this browser');
-}
-
-let autosaveTimer: number | undefined;
-useAppStore.subscribe((state) => {
-  window.clearTimeout(autosaveTimer);
-  autosaveTimer = window.setTimeout(() => saveAutosave(state), 800);
-});

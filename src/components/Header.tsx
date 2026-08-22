@@ -59,7 +59,6 @@ export default function Header() {
             e.target.value = '';
           }}
         />
-        <span className="text-2xs text-mute3">auto-saved to this browser</span>
       </div>
 
       <div className="flex-1" />

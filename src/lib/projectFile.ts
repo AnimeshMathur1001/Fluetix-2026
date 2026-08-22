@@ -58,7 +58,7 @@ export interface ProjectFile {
     solidRefTempC: number;
   };
   /** Custom materials the user saved — included so a shared project file carries them
-   *  along too, not just this browser's own autosave (see lib/autosave.ts). */
+   *  along too. */
   customFluids: Record<string, CustomFluid>;
   customSolids: Record<string, CustomSolid>;
   meshSolve: {
