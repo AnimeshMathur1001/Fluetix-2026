@@ -52,7 +52,7 @@ if (Test-CommandExists 'python') {
 
 if (-not $pythonExe) {
     Write-Step "Python 3.10+ not found - installing Python 3.12 via winget (requires internet)"
-    winget install --id Python.Python.3.12 -e --silent --accept-source-agreements --accept-package-agreements
+    winget install --id Python.Python.3.12 -e --silent --disable-interactivity --accept-source-agreements --accept-package-agreements
     if ($LASTEXITCODE -ne 0) {
         throw "Python installation via winget failed (exit code $LASTEXITCODE). Install Python 3.10+ manually from python.org and re-run this installer."
     }
@@ -69,7 +69,7 @@ if (-not $pythonExe) {
 $gtkPresent = $null -ne (winget list --id tschoonj.GTKForWindows 2>&1 | Select-String 'tschoonj.GTKForWindows')
 if (-not $gtkPresent) {
     Write-Step "GTK3 runtime not found - installing via winget (needed for PDF report generation)"
-    winget install --id tschoonj.GTKForWindows -e --silent --accept-source-agreements --accept-package-agreements
+    winget install --id tschoonj.GTKForWindows -e --silent --disable-interactivity --accept-source-agreements --accept-package-agreements
     if ($LASTEXITCODE -ne 0) {
         Write-Host "Warning: GTK3 runtime installation failed. Every Fluetix feature except PDF report generation will still work." -ForegroundColor Yellow
     }
@@ -87,8 +87,8 @@ if ($LASTEXITCODE -ne 0) { throw "Failed to create the Python virtual environmen
 $venvPython = Join-Path $venvDir 'Scripts\python.exe'
 
 Write-Step "Installing Fluetix's Python packages (this can take several minutes)"
-& $venvPython -m pip install --upgrade pip
-& $venvPython -m pip install -r (Join-Path $AppDir 'backend\requirements.txt')
+& $venvPython -m pip install --upgrade pip --no-input
+& $venvPython -m pip install --no-input -r (Join-Path $AppDir 'backend\requirements.txt')
 if ($LASTEXITCODE -ne 0) {
     throw "Failed to install one or more required Python packages. Check your internet connection and re-run this installer."
 }
