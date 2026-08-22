@@ -4,47 +4,129 @@
 #
 # Starts the backend (which also serves the built front end, see
 # backend/app/main.py) in the background if it isn't already running,
-# then opens it in the default browser.
+# then opens it in the default browser. Runs with no visible window.
+# On failure this shows a message box instead of printing to a console
+# that would just flash and disappear, and always writes a log to
+# run\launch.log for troubleshooting.
 
 $ErrorActionPreference = 'Stop'
+Add-Type -AssemblyName System.Windows.Forms | Out-Null
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $appDir = Split-Path -Parent $scriptDir
+$runDir = Join-Path $appDir 'run'
+New-Item -ItemType Directory -Force -Path $runDir | Out-Null
+$logFile = Join-Path $runDir 'launch.log'
 
-$venvPythonw = Join-Path $appDir 'venv\Scripts\pythonw.exe'
-$venvPython = Join-Path $appDir 'venv\Scripts\python.exe'
-$runner = if (Test-Path $venvPythonw) { $venvPythonw } elseif (Test-Path $venvPython) { $venvPython } else { $null }
+function Write-Log([string]$Message) {
+    $stamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
+    Add-Content -Path $logFile -Value "[$stamp] $Message"
+}
 
-if (-not $runner) {
-    Write-Host "Fluetix's Python environment isn't set up yet. Please reinstall Fluetix, or re-run install-prereqs.ps1 from the install folder's scripts subfolder." -ForegroundColor Red
-    Start-Sleep -Seconds 6
+function Show-FailureAndExit([string]$Message) {
+    Write-Log "FAILED: $Message"
+    $fullText = $Message + "`n`nDetails were written to:`n" + $logFile
+    [System.Windows.Forms.MessageBox]::Show($fullText, 'Fluetix could not start', [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error) | Out-Null
     exit 1
 }
 
-$runDir = Join-Path $appDir 'run'
-New-Item -ItemType Directory -Force -Path $runDir | Out-Null
+Write-Log "launch.ps1 starting (appDir=$appDir)"
+
+$venvPythonw = Join-Path $appDir 'venv\Scripts\pythonw.exe'
+$venvPython = Join-Path $appDir 'venv\Scripts\python.exe'
+
+$runner = $null
+if (Test-Path $venvPythonw) {
+    $runner = $venvPythonw
+} elseif (Test-Path $venvPython) {
+    $runner = $venvPython
+}
+
+if (-not $runner) {
+    $venvPath = Join-Path $appDir 'venv'
+    $scriptsPath = Join-Path $appDir 'scripts'
+    $notReadyMsg = "Fluetix's Python environment isn't set up (no venv found under $venvPath). This usually means the setup step that installs Python packages didn't finish. Try reinstalling Fluetix, or re-run install-prereqs.ps1 from $scriptsPath as Administrator and watch for errors."
+    Show-FailureAndExit $notReadyMsg
+}
+
+Write-Log "Using interpreter: $runner"
+
 $pidFile = Join-Path $runDir 'fluetix.pid'
 
 $alreadyRunning = $false
 if (Test-Path $pidFile) {
     $existingPid = Get-Content $pidFile -ErrorAction SilentlyContinue
-    if ($existingPid -and (Get-Process -Id $existingPid -ErrorAction SilentlyContinue)) {
-        $alreadyRunning = $true
+    if ($existingPid) {
+        $existingProc = Get-Process -Id $existingPid -ErrorAction SilentlyContinue
+        if ($existingProc) {
+            $alreadyRunning = $true
+            Write-Log "Backend already running (pid $existingPid), reusing it"
+        }
     }
 }
 
 if (-not $alreadyRunning) {
     $backendDir = Join-Path $appDir 'backend'
-    $proc = Start-Process -FilePath $runner -ArgumentList '-m', 'app.main' -WorkingDirectory $backendDir -WindowStyle Hidden -PassThru
-    $proc.Id | Out-File -FilePath $pidFile -Encoding ascii
+    $stdoutLog = Join-Path $runDir 'backend.out.log'
+    $stderrLog = Join-Path $runDir 'backend.err.log'
 
-    for ($i = 0; $i -lt 40; $i++) {
-        Start-Sleep -Milliseconds 500
-        try {
-            $r = Invoke-WebRequest -Uri 'http://127.0.0.1:8000/health' -UseBasicParsing -TimeoutSec 1
-            if ($r.StatusCode -eq 200) { break }
-        } catch {}
+    Write-Log "Starting backend: $runner -m app.main (cwd=$backendDir)"
+
+    $startArgs = @{}
+    $startArgs.FilePath = $runner
+    $startArgs.ArgumentList = @('-m', 'app.main')
+    $startArgs.WorkingDirectory = $backendDir
+    $startArgs.WindowStyle = 'Hidden'
+    $startArgs.PassThru = $true
+    $startArgs.RedirectStandardOutput = $stdoutLog
+    $startArgs.RedirectStandardError = $stderrLog
+
+    $proc = $null
+    try {
+        $proc = Start-Process @startArgs
+    } catch {
+        $startErrorMsg = "Could not start the Fluetix backend process: " + $_.Exception.Message
+        Show-FailureAndExit $startErrorMsg
     }
+    $proc.Id | Out-File -FilePath $pidFile -Encoding ascii
+    Write-Log "Backend process id: $($proc.Id)"
+
+    $ready = $false
+    $attempt = 0
+    while ($attempt -lt 40) {
+        Start-Sleep -Milliseconds 500
+        if ($proc.HasExited) {
+            break
+        }
+        try {
+            $healthResponse = Invoke-WebRequest -Uri 'http://127.0.0.1:8000/health' -UseBasicParsing -TimeoutSec 1
+            if ($healthResponse.StatusCode -eq 200) {
+                $ready = $true
+                break
+            }
+        } catch {
+        }
+        $attempt = $attempt + 1
+    }
+
+    if (-not $ready) {
+        $reason = "the backend did not respond on http://127.0.0.1:8000 within 20 seconds. Another program may already be using port 8000."
+        if ($proc.HasExited) {
+            $reason = "the backend process exited immediately (exit code $($proc.ExitCode))."
+        }
+        Write-Log "Startup failed: $reason"
+        if (Test-Path $stderrLog) {
+            $errTail = Get-Content $stderrLog -Tail 15 -ErrorAction SilentlyContinue
+            if ($errTail) {
+                Write-Log "Last backend error output:"
+                Write-Log ($errTail -join "`n")
+            }
+        }
+        $failMsg = "Fluetix's backend failed to start: " + $reason + "`n`nSee run\backend.err.log next to launch.log for the full error."
+        Show-FailureAndExit $failMsg
+    }
+    Write-Log "Backend is up and responding on port 8000"
 }
 
+Write-Log "Opening browser"
 Start-Process 'http://127.0.0.1:8000/'
