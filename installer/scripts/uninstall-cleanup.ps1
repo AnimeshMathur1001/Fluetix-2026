@@ -3,16 +3,18 @@
 # Licensed under the Apache License, Version 2.0.
 #
 # Stops any running Fluetix server so the uninstaller isn't blocked by
-# locked files, then removes the virtual environment and run directory —
-# neither was installed via the installer's own file list, so they must be
-# cleaned up explicitly here. Python and the GTK3 runtime (shared system
-# components, not private to Fluetix) are deliberately left in place.
+# locked files, then removes the virtual environment (not installed via
+# the installer's own file list, so it must be cleaned up explicitly here)
+# and the per-user run directory under %LOCALAPPDATA%. Python and the GTK3
+# runtime (shared system components, not private to Fluetix) are
+# deliberately left in place.
 
 param(
     [Parameter(Mandatory = $true)][string]$AppDir
 )
 
-$pidFile = Join-Path $AppDir 'run\fluetix.pid'
+$runDir = Join-Path $env:LOCALAPPDATA 'Fluetix\run'
+$pidFile = Join-Path $runDir 'fluetix.pid'
 if (Test-Path $pidFile) {
     $existingPid = Get-Content $pidFile -ErrorAction SilentlyContinue
     if ($existingPid) {
@@ -22,4 +24,4 @@ if (Test-Path $pidFile) {
 Start-Sleep -Seconds 1
 
 Remove-Item -Recurse -Force -Path (Join-Path $AppDir 'venv') -ErrorAction SilentlyContinue
-Remove-Item -Recurse -Force -Path (Join-Path $AppDir 'run') -ErrorAction SilentlyContinue
+Remove-Item -Recurse -Force -Path $runDir -ErrorAction SilentlyContinue

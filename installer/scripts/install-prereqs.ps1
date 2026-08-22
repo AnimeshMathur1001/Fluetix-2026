@@ -29,6 +29,30 @@ function Refresh-Path {
     $env:Path = "$machinePath;$userPath"
 }
 
+# Finds a real Python 3.10+ on PATH, skipping Windows Store app-execution-alias
+# stubs (e.g. %LOCALAPPDATA%\Microsoft\WindowsApps\python.exe) -- these are
+# 0-byte reparse points that can run `python --version` fine but silently
+# no-op on anything heavier (like `-m venv`) when invoked from this elevated
+# installer, since UWP alias activation doesn't run at admin integrity level.
+function Get-RealPythonExe {
+    foreach ($candidate in (Get-Command python -All -ErrorAction SilentlyContinue)) {
+        $path = $candidate.Source
+        if (-not $path) { continue }
+        $item = Get-Item $path -ErrorAction SilentlyContinue
+        if (-not $item -or $item.Length -eq 0) { continue }
+        try {
+            $verOut = (& $path --version) 2>&1
+            if ($verOut -match '(\d+)\.(\d+)') {
+                $maj = [int]$Matches[1]; $min = [int]$Matches[2]
+                if ($maj -gt 3 -or ($maj -eq 3 -and $min -ge 10)) {
+                    return $path
+                }
+            }
+        } catch {}
+    }
+    return $null
+}
+
 Write-Host "Fluetix setup - installing required components" -ForegroundColor Green
 Write-Host "Author: Animesh Mathur   Co-Authors: Arihant Kumar Singh, Aviral Gupta"
 
@@ -37,18 +61,7 @@ if (-not (Test-CommandExists 'winget')) {
 }
 
 # --- 1. Python 3.10+ -------------------------------------------------------
-$pythonExe = $null
-if (Test-CommandExists 'python') {
-    try {
-        $verOut = (& python --version) 2>&1
-        if ($verOut -match '(\d+)\.(\d+)') {
-            $maj = [int]$Matches[1]; $min = [int]$Matches[2]
-            if ($maj -gt 3 -or ($maj -eq 3 -and $min -ge 10)) {
-                $pythonExe = (Get-Command python).Source
-            }
-        }
-    } catch {}
-}
+$pythonExe = Get-RealPythonExe
 
 if (-not $pythonExe) {
     Write-Step "Python 3.10+ not found - installing Python 3.12 via winget (requires internet)"
@@ -57,7 +70,7 @@ if (-not $pythonExe) {
         throw "Python installation via winget failed (exit code $LASTEXITCODE). Install Python 3.10+ manually from python.org and re-run this installer."
     }
     Refresh-Path
-    if (Test-CommandExists 'python') { $pythonExe = (Get-Command python).Source }
+    $pythonExe = Get-RealPythonExe
     if (-not $pythonExe) {
         throw "Python was installed but is not yet on PATH in this session. Please re-run this installer (or restart Windows) to finish setup."
     }
@@ -123,13 +136,14 @@ Write-Step "Creating a private Python environment for Fluetix"
 $venvDir = Join-Path $AppDir 'venv'
 if (Test-Path $venvDir) { Remove-Item -Recurse -Force $venvDir }
 & $pythonExe -m venv $venvDir
-if ($LASTEXITCODE -ne 0) { throw "Failed to create the Python virtual environment." }
-
 $venvPython = Join-Path $venvDir 'Scripts\python.exe'
+if ($LASTEXITCODE -ne 0 -or -not (Test-Path $venvPython)) {
+    throw "Failed to create the Python virtual environment (using $pythonExe)."
+}
 
 Write-Step "Installing Fluetix's Python packages (this can take several minutes)"
 & $venvPython -m pip install --upgrade pip --no-input
-& $venvPython -m pip install --no-input -r (Join-Path $AppDir 'backend\requirements.txt')
+& $venvPython -m pip install --no-input -r (Join-Path $AppDir 'backend\requirements.txt') -r (Join-Path $AppDir 'backend\requirements-desktop.txt')
 if ($LASTEXITCODE -ne 0) {
     throw "Failed to install one or more required Python packages. Check your internet connection and re-run this installer."
 }

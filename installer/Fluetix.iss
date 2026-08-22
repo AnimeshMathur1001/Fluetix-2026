@@ -49,6 +49,7 @@ Source: "assets\fluetix.ico"; DestDir: "{app}\assets"; Flags: ignoreversion
 Source: "..\dist\*"; DestDir: "{app}\dist"; Flags: recursesubdirs createallsubdirs ignoreversion
 Source: "..\backend\app\*"; DestDir: "{app}\backend\app"; Flags: recursesubdirs createallsubdirs ignoreversion; Excludes: "__pycache__,*.pyc,data"
 Source: "..\backend\requirements.txt"; DestDir: "{app}\backend"; Flags: ignoreversion
+Source: "..\backend\requirements-desktop.txt"; DestDir: "{app}\backend"; Flags: ignoreversion
 Source: "..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\NOTICE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
@@ -69,7 +70,6 @@ Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -Fil
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}\venv"
-Type: filesandordirs; Name: "{app}\run"
 Type: filesandordirs; Name: "{app}\backend\app\data"
 
 [Messages]

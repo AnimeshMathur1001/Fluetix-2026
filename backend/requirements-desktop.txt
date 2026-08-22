@@ -1,0 +1,4 @@
+# Extra dependency for the Windows desktop shell (backend/app/webview_window.py)
+# only — not needed by backend/requirements.txt's Docker/server deployment, so
+# it's kept separate rather than bloating that image with a GUI toolkit.
+pywebview>=5.0

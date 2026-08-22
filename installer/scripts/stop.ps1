@@ -4,9 +4,7 @@
 
 Add-Type -AssemblyName System.Windows.Forms | Out-Null
 
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$appDir = Split-Path -Parent $scriptDir
-$pidFile = Join-Path $appDir 'run\fluetix.pid'
+$pidFile = Join-Path $env:LOCALAPPDATA 'Fluetix\run\fluetix.pid'
 
 $message = 'Fluetix was not running.'
 if (Test-Path $pidFile) {
