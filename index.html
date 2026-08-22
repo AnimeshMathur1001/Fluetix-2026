@@ -10,9 +10,417 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
+    <style>
+      /* Startup splash — shown on every launch while the real app boots, then
+         removed. Scoped under fx-splash- so nothing here can collide with the
+         app's own styles once this markup is gone. */
+      .fx-splash-stage {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        isolation: isolate;
+        background: radial-gradient(ellipse 55% 55% at 50% 47%, #173354 0%, #0d2038 43%, #071321 100%);
+        transition: opacity 0.4s ease;
+      }
+      .fx-splash-stage.fx-splash-hide {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .fx-splash-blob {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(100px);
+        opacity: 0.14;
+        pointer-events: none;
+      }
+      .fx-splash-blob-blue {
+        width: 40vw;
+        height: 40vw;
+        max-width: 560px;
+        max-height: 560px;
+        background: #009dff;
+        top: -15%;
+        left: -12%;
+        animation: fx-splash-driftBlue 12s ease-in-out infinite;
+      }
+      .fx-splash-blob-orange {
+        width: 38vw;
+        height: 38vw;
+        max-width: 520px;
+        max-height: 520px;
+        background: #ff5a16;
+        bottom: -15%;
+        right: -10%;
+        animation: fx-splash-driftOrange 14s ease-in-out infinite;
+      }
+      @keyframes fx-splash-driftBlue {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(5vw, 3vw); }
+      }
+      @keyframes fx-splash-driftOrange {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(-4vw, -3vw); }
+      }
+
+      .fx-splash-logo-wrap {
+        position: relative;
+        width: min(42vw, 520px);
+        aspect-ratio: 1.5 / 1;
+        display: grid;
+        place-items: center;
+        transform: translateY(28px);
+      }
+      .fx-splash-logo-glow {
+        position: absolute;
+        width: 72%;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(24, 202, 255, 0.35) 0%, rgba(255, 105, 30, 0.2) 42%, transparent 72%);
+        filter: blur(35px);
+        opacity: 0;
+        transform: scale(0.45);
+        animation:
+          fx-splash-glowIn 1.8s cubic-bezier(0.16, 1, 0.3, 1) 0.25s forwards,
+          fx-splash-glowBreathe 3s ease-in-out 2.2s infinite;
+      }
+      .fx-splash-logo {
+        position: relative;
+        z-index: 5;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        opacity: 0;
+        transform: scale(0.72);
+        clip-path: circle(0% at 50% 50%);
+        filter: brightness(1.25) saturate(1.15) blur(7px) drop-shadow(0 0 0 transparent);
+        animation:
+          fx-splash-logoReveal 1.65s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards,
+          fx-splash-logoSettle 0.9s ease 1.95s forwards;
+      }
+      @keyframes fx-splash-logoReveal {
+        0% {
+          opacity: 0;
+          transform: scale(0.72);
+          clip-path: circle(0% at 50% 50%);
+          filter: brightness(1.6) saturate(1.3) blur(8px);
+        }
+        18% { opacity: 1; }
+        65% { clip-path: circle(65% at 50% 50%); }
+        100% {
+          opacity: 1;
+          transform: scale(1);
+          clip-path: circle(78% at 50% 50%);
+          filter: brightness(1.05) saturate(1.05) blur(0);
+        }
+      }
+      @keyframes fx-splash-logoSettle {
+        0% {
+          filter: brightness(1.2) saturate(1.15) drop-shadow(0 0 25px rgba(24, 200, 255, 0.55))
+            drop-shadow(0 0 25px rgba(255, 95, 30, 0.35));
+        }
+        100% {
+          filter: brightness(1) saturate(1) drop-shadow(0 0 8px rgba(24, 200, 255, 0.16))
+            drop-shadow(0 0 8px rgba(255, 95, 30, 0.12));
+        }
+      }
+      @keyframes fx-splash-glowIn {
+        0% { opacity: 0; transform: scale(0.45); }
+        45% { opacity: 1; transform: scale(1.08); }
+        100% { opacity: 0.72; transform: scale(1); }
+      }
+      @keyframes fx-splash-glowBreathe {
+        0%, 100% { opacity: 0.55; transform: scale(1); }
+        50% { opacity: 0.82; transform: scale(1.08); }
+      }
+
+      .fx-splash-scan {
+        position: absolute;
+        z-index: 7;
+        width: 18%;
+        height: 90%;
+        left: 17%;
+        top: 5%;
+        opacity: 0;
+        pointer-events: none;
+        transform: skewX(-18deg);
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+        filter: blur(5px);
+        animation: fx-splash-scan 1.2s ease-out 0.75s forwards;
+      }
+      @keyframes fx-splash-scan {
+        0% { left: 12%; opacity: 0; }
+        15% { opacity: 0.8; }
+        100% { left: 82%; opacity: 0; }
+      }
+
+      .fx-splash-ring {
+        position: absolute;
+        z-index: 2;
+        width: 35%;
+        aspect-ratio: 1;
+        border-radius: 50%;
+        border: 1px solid rgba(80, 200, 255, 0.35);
+        opacity: 0;
+        transform: scale(0.2);
+      }
+      .fx-splash-ring.fx-splash-r2 {
+        border-color: rgba(255, 125, 50, 0.25);
+        animation: fx-splash-ring 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) 1.55s forwards;
+      }
+      .fx-splash-ring.fx-splash-r1 {
+        animation: fx-splash-ring 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) 1.42s forwards;
+      }
+      @keyframes fx-splash-ring {
+        0% { opacity: 0.8; transform: scale(0.2); }
+        100% { opacity: 0; transform: scale(3.1); }
+      }
+
+      #fx-splash-particles {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 4;
+        pointer-events: none;
+      }
+
+      .fx-splash-flash {
+        position: absolute;
+        inset: 0;
+        z-index: 8;
+        pointer-events: none;
+        background: radial-gradient(circle at 50% 48%, rgba(255, 255, 255, 0.72), transparent 35%);
+        opacity: 0;
+        animation: fx-splash-flash 0.5s ease-out 1.72s forwards;
+      }
+      @keyframes fx-splash-flash {
+        0% { opacity: 0; }
+        12% { opacity: 0.65; }
+        100% { opacity: 0; }
+      }
+
+      .fx-splash-text-block {
+        margin-top: clamp(18px, 2.5vh, 30px);
+        text-align: center;
+        opacity: 0;
+        transform: translateY(14px);
+        animation: fx-splash-textBlockIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 2.25s forwards;
+      }
+      .fx-splash-wordmark {
+        margin: 0;
+        color: #eef7ff;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: clamp(30px, 3.5vw, 50px);
+        line-height: 1;
+        font-weight: 700;
+        letter-spacing: 0.25em;
+        text-indent: 0.25em;
+        text-shadow: 0 0 10px rgba(70, 210, 255, 0.18);
+        white-space: nowrap;
+      }
+      .fx-splash-credit {
+        margin-top: 11px;
+        color: #8ea0b9;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: clamp(10px, 1.05vw, 14px);
+        line-height: 1;
+        font-weight: 500;
+        letter-spacing: 0.28em;
+        text-indent: 0.28em;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+      .fx-splash-credit-sub {
+        margin: 7px auto 0;
+        max-width: min(80vw, 440px);
+        color: #64758d;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: clamp(9px, 0.85vw, 12px);
+        line-height: 1.4;
+        font-weight: 400;
+        letter-spacing: 0.04em;
+        white-space: normal;
+      }
+      @keyframes fx-splash-textBlockIn {
+        0% { opacity: 0; transform: translateY(14px); filter: blur(7px); }
+        100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+      }
+
+      @media (max-width: 700px) {
+        .fx-splash-logo-wrap { width: 78vw; transform: translateY(18px); }
+        .fx-splash-text-block { margin-top: 18px; }
+        .fx-splash-wordmark { font-size: clamp(27px, 8vw, 40px); }
+        .fx-splash-credit { font-size: 10px; letter-spacing: 0.2em; text-indent: 0.2em; }
+        .fx-splash-credit-sub { font-size: 9px; max-width: 86vw; margin-top: 6px; }
+      }
+    </style>
   </head>
   <body>
+    <div id="fx-splash" class="fx-splash-stage">
+      <div class="fx-splash-blob fx-splash-blob-blue"></div>
+      <div class="fx-splash-blob fx-splash-blob-orange"></div>
+      <canvas id="fx-splash-particles"></canvas>
+      <div class="fx-splash-logo-wrap">
+        <div class="fx-splash-logo-glow"></div>
+        <div class="fx-splash-ring fx-splash-r1"></div>
+        <div class="fx-splash-ring fx-splash-r2"></div>
+        <img class="fx-splash-logo" src="/fluetix-splash-logo.png" alt="Fluetix logo" />
+        <div class="fx-splash-scan"></div>
+      </div>
+      <div class="fx-splash-text-block">
+        <div class="fx-splash-wordmark">FLUETIX</div>
+        <div class="fx-splash-credit">MADE BY ANIMESH</div>
+        <div class="fx-splash-credit-sub">Co-developed by Arihant Kumar Singh and Aviral Gupta</div>
+      </div>
+      <div class="fx-splash-flash"></div>
+    </div>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+
+    <script>
+      (function () {
+        var canvas = document.getElementById('fx-splash-particles');
+        var ctx = canvas.getContext('2d');
+        var W, H, dpr;
+        var particles = [];
+        var start;
+        var running = true;
+
+        function resize() {
+          dpr = Math.min(window.devicePixelRatio || 1, 2);
+          W = innerWidth;
+          H = innerHeight;
+          canvas.width = W * dpr;
+          canvas.height = H * dpr;
+          canvas.style.width = W + 'px';
+          canvas.style.height = H + 'px';
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        resize();
+        addEventListener('resize', resize);
+
+        var BLUE = [35, 190, 255];
+        var CYAN = [65, 225, 255];
+        var ORANGE = [255, 105, 35];
+        var GOLD = [255, 185, 45];
+
+        function mix(a, b, t) {
+          return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+        }
+        function spawn(x, y, vx, vy, color, size, life) {
+          particles.push({ x: x, y: y, vx: vx, vy: vy, color: color, size: size, life: life, maxLife: life });
+        }
+        function draw(p) {
+          var a = Math.max(p.life / p.maxLife, 0);
+          var r = p.color[0], g = p.color[1], b = p.color[2];
+          var grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+          grad.addColorStop(0, 'rgba(' + r + ',' + g + ',' + b + ',' + 0.9 * a + ')');
+          grad.addColorStop(0.45, 'rgba(' + r + ',' + g + ',' + b + ',' + 0.35 * a + ')');
+          grad.addColorStop(1, 'rgba(' + r + ',' + g + ',' + b + ',0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        function frame(now) {
+          if (!running) return;
+          if (!start) start = now;
+          var elapsed = now - start;
+          ctx.clearRect(0, 0, W, H);
+          ctx.globalCompositeOperation = 'lighter';
+          var cx = W / 2, cy = H / 2;
+
+          if (elapsed < 1500) {
+            var p = Math.min(elapsed / 1500, 1);
+            var ease = 1 - Math.pow(1 - p, 2.5);
+            var radius = 380 * (1 - ease) + 20;
+            for (var i = 0; i < 3; i++) {
+              var a = Math.random() * Math.PI * 2;
+              var col = Math.random() < 0.5 ? mix(BLUE, CYAN, Math.random()) : mix(ORANGE, GOLD, Math.random());
+              spawn(
+                cx + Math.cos(a) * radius * (0.65 + Math.random() * 0.35),
+                cy + Math.sin(a) * radius,
+                -Math.cos(a) * (2 + Math.random() * 5),
+                -Math.sin(a) * (2 + Math.random() * 5),
+                col,
+                2 + Math.random() * 4,
+                420,
+              );
+            }
+          }
+
+          if (elapsed > 1550 && elapsed < 1900 && Math.random() < 0.9) {
+            var a2 = Math.random() * Math.PI * 2;
+            var speed = 50 + Math.random() * 180;
+            var col2 = Math.random() < 0.5 ? mix(BLUE, CYAN, Math.random()) : mix(ORANGE, GOLD, Math.random());
+            spawn(
+              cx + Math.cos(a2) * 25,
+              cy + Math.sin(a2) * 25,
+              Math.cos(a2) * speed,
+              Math.sin(a2) * speed,
+              col2,
+              2 + Math.random() * 5,
+              800 + Math.random() * 600,
+            );
+          }
+
+          var dt = 16.67;
+          for (var j = particles.length - 1; j >= 0; j--) {
+            var particle = particles[j];
+            particle.life -= dt;
+            if (particle.life <= 0) {
+              particles.splice(j, 1);
+              continue;
+            }
+            particle.x += particle.vx * 0.018;
+            particle.y += particle.vy * 0.018;
+            particle.vx *= 0.985;
+            particle.vy *= 0.985;
+            draw(particle);
+          }
+
+          ctx.globalCompositeOperation = 'source-over';
+          requestAnimationFrame(frame);
+        }
+        requestAnimationFrame(frame);
+
+        // Hide once the animation has had time to play AND the real app has
+        // actually rendered something — whichever finishes later — so it
+        // never flashes away too early or lingers over a blank white gap.
+        var stage = document.getElementById('fx-splash');
+        var root = document.getElementById('root');
+        var minTimeElapsed = false;
+        var appMounted = false;
+
+        function tryHide() {
+          if (!minTimeElapsed || !appMounted) return;
+          running = false;
+          stage.classList.add('fx-splash-hide');
+          setTimeout(function () {
+            stage.remove();
+          }, 450);
+        }
+
+        setTimeout(function () {
+          minTimeElapsed = true;
+          tryHide();
+        }, 2600);
+
+        var observer = new MutationObserver(function () {
+          if (root.childElementCount > 0) {
+            appMounted = true;
+            observer.disconnect();
+            tryHide();
+          }
+        });
+        observer.observe(root, { childList: true });
+      })();
+    </script>
   </body>
 </html>
