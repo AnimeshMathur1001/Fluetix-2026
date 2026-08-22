@@ -66,15 +66,56 @@ if (-not $pythonExe) {
 }
 
 # --- 2. GTK3 runtime (required by WeasyPrint for PDF report generation) ----
-$gtkPresent = $null -ne (winget list --id tschoonj.GTKForWindows 2>&1 | Select-String 'tschoonj.GTKForWindows')
-if (-not $gtkPresent) {
-    Write-Step "GTK3 runtime not found - installing via winget (needed for PDF report generation)"
-    winget install --id tschoonj.GTKForWindows -e --silent --disable-interactivity --accept-source-agreements --accept-package-agreements
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "Warning: GTK3 runtime installation failed. Every Fluetix feature except PDF report generation will still work." -ForegroundColor Yellow
+# Downloaded and run directly with its own NSIS silent switch (/S) rather
+# than through "winget install" -- winget's --silent flag only suppresses
+# winget's own prompts, not this specific package's installer UI, which
+# left users stuck looking at (and having to click through) a hidden
+# installer window with no visible progress from winget's side.
+function Test-GtkPresent {
+    $candidates = @(
+        (Join-Path ${env:ProgramFiles} 'GTK3-Runtime Win64\bin\libgobject-2.0-0.dll'),
+        (Join-Path ${env:ProgramFiles(x86)} 'GTK3-Runtime Win64\bin\libgobject-2.0-0.dll')
+    )
+    foreach ($c in $candidates) {
+        if ($c -and (Test-Path $c)) { return $true }
     }
-} else {
+    $pathDirs = $env:Path -split ';'
+    foreach ($dir in $pathDirs) {
+        if ($dir -and (Test-Path (Join-Path $dir 'libgobject-2.0-0.dll'))) { return $true }
+    }
+    return $false
+}
+
+if (Test-GtkPresent) {
     Write-Step "GTK3 runtime already present"
+} else {
+    Write-Step "GTK3 runtime not found - downloading (needed for PDF report generation)"
+    $gtkInstallerPath = Join-Path $env:TEMP 'fluetix-gtk3-runtime-setup.exe'
+    $gtkOk = $true
+    try {
+        $release = Invoke-RestMethod -Uri 'https://api.github.com/repos/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases/latest' -UseBasicParsing
+        $asset = $release.assets | Where-Object { $_.name -like '*win64*.exe' } | Select-Object -First 1
+        if (-not $asset) { throw "Could not find a win64 installer asset in the latest GTK3 runtime release." }
+        Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $gtkInstallerPath -UseBasicParsing
+    } catch {
+        Write-Host ("Warning: could not download the GTK3 runtime (" + $_.Exception.Message + "). PDF report generation will not work, every other Fluetix feature will.") -ForegroundColor Yellow
+        $gtkOk = $false
+    }
+
+    if ($gtkOk) {
+        Write-Step "Installing GTK3 runtime silently"
+        try {
+            $gtkProc = Start-Process -FilePath $gtkInstallerPath -ArgumentList '/S' -PassThru
+            $finished = $gtkProc.WaitForExit(180000)
+            if (-not $finished) {
+                Stop-Process -Id $gtkProc.Id -Force -ErrorAction SilentlyContinue
+                Write-Host "Warning: GTK3 runtime installer did not finish within 3 minutes and was stopped. PDF report generation may not work." -ForegroundColor Yellow
+            }
+        } catch {
+            Write-Host ("Warning: GTK3 runtime installation failed (" + $_.Exception.Message + "). Every other Fluetix feature will still work.") -ForegroundColor Yellow
+        }
+        Remove-Item -Force $gtkInstallerPath -ErrorAction SilentlyContinue
+    }
 }
 
 # --- 3. Private virtual environment + Python packages -----------------------

@@ -34,8 +34,9 @@ SolidCompression=yes
 WizardStyle=modern
 PrivilegesRequired=admin
 ArchitecturesInstallIn64BitMode=x64compatible
+SetupIconFile=assets\fluetix.ico
 UninstallDisplayName={#MyAppName}
-UninstallDisplayIcon={uninstallexe}
+UninstallDisplayIcon={app}\assets\fluetix.ico
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -44,6 +45,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription: "Additional shortcuts:"
 
 [Files]
+Source: "assets\fluetix.ico"; DestDir: "{app}\assets"; Flags: ignoreversion
 Source: "..\dist\*"; DestDir: "{app}\dist"; Flags: recursesubdirs createallsubdirs ignoreversion
 Source: "..\backend\app\*"; DestDir: "{app}\backend\app"; Flags: recursesubdirs createallsubdirs ignoreversion; Excludes: "__pycache__,*.pyc,data"
 Source: "..\backend\requirements.txt"; DestDir: "{app}\backend"; Flags: ignoreversion
@@ -53,10 +55,10 @@ Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "scripts\*"; DestDir: "{app}\scripts"; Flags: recursesubdirs createallsubdirs ignoreversion
 
 [Icons]
-Name: "{group}\{#MyAppName}"; Filename: "powershell.exe"; Parameters: "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""{app}\scripts\launch.ps1"""; WorkingDir: "{app}"; Comment: "Launch {#MyAppName} — by Animesh Mathur, Arihant Kumar Singh, Aviral Gupta"
-Name: "{group}\Stop {#MyAppName}"; Filename: "powershell.exe"; Parameters: "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""{app}\scripts\stop.ps1"""; WorkingDir: "{app}"
+Name: "{group}\{#MyAppName}"; Filename: "powershell.exe"; Parameters: "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""{app}\scripts\launch.ps1"""; WorkingDir: "{app}"; IconFilename: "{app}\assets\fluetix.ico"; Comment: "Launch {#MyAppName} — by Animesh Mathur, Arihant Kumar Singh, Aviral Gupta"
+Name: "{group}\Stop {#MyAppName}"; Filename: "powershell.exe"; Parameters: "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""{app}\scripts\stop.ps1"""; WorkingDir: "{app}"; IconFilename: "{app}\assets\fluetix.ico"
 Name: "{group}\Uninstall {#MyAppName}"; Filename: "{uninstallexe}"
-Name: "{autodesktop}\{#MyAppName}"; Filename: "powershell.exe"; Parameters: "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""{app}\scripts\launch.ps1"""; WorkingDir: "{app}"; Tasks: desktopicon
+Name: "{autodesktop}\{#MyAppName}"; Filename: "powershell.exe"; Parameters: "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File ""{app}\scripts\launch.ps1"""; WorkingDir: "{app}"; IconFilename: "{app}\assets\fluetix.ico"; Tasks: desktopicon
 
 [Run]
 Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\scripts\install-prereqs.ps1"" -AppDir ""{app}"""; StatusMsg: "Installing required components (Python, GTK3 runtime, Python packages) — needs an internet connection and may take several minutes…"; Flags: waituntilterminated
