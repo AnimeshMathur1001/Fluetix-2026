@@ -1,0 +1,15 @@
+fastapi>=0.111
+uvicorn[standard]>=0.30
+pydantic>=2.7
+numpy>=1.26
+# Enumerates every active local network adapter (Wi-Fi, Ethernet, a phone
+# hotspot this PC joined, this PC's own hotspot) for the mobile
+# remote-control QR pairing (routers/remote.py) — falls back to
+# hostname-only discovery if this isn't installed.
+psutil>=5.9
+jinja2>=3.1
+weasyprint>=60.0
+
+# Optional — the app degrades gracefully (see README) if these aren't installed.
+# scikit-image   # real marching-cubes surface extraction for POST /geometry/lattice
+# CoolProp       # real equation-of-state fluid properties for GET /properties

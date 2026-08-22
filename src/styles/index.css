@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: #0b0d0f;
+  overflow: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Inter, system-ui, sans-serif;
+  color: #e6e9ec;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.13);
+  border-radius: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Global keyboard-focus ring — only for keyboard/programmatic focus, never
+   for mouse clicks, so buttons don't get a ring on every click. */
+:focus {
+  outline: none;
+}
+:focus-visible {
+  outline: 2px solid #5ec8c0;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Warm orange range sliders, per the design. The filled portion of the
+   track (left edge to the thumb) is painted by SliderInput.tsx via an
+   inline background-image gradient — this file only styles the base
+   track/thumb chrome shared by every slider. */
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 2px;
+}
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #e8a33d;
+  border: none;
+  cursor: grab;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+input[type='range']:hover::-webkit-slider-thumb {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 4px rgba(232, 163, 61, 0.15);
+}
+input[type='range']:active::-webkit-slider-thumb {
+  cursor: grabbing;
+}
+input[type='range']:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 3px rgba(94, 200, 192, 0.5);
+}
+input[type='range']::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #e8a33d;
+  border: none;
+  cursor: grab;
+}
+input[type='range']::-moz-range-progress {
+  background: #e8a33d;
+  height: 3px;
+  border-radius: 2px;
+}
+
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+select {
+  background-image: none;
+}
+
+canvas {
+  display: block;
+  outline: none;
+}

@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Remote Controller</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none;
+    background: #14181d; color: #e7ecf2;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  body { display: flex; flex-direction: column; }
+
+  header {
+    flex: 0 0 auto;
+    padding: max(10px, env(safe-area-inset-top)) 12px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #9aa4b0; }
+  .dot { width: 7px; height: 7px; border-radius: 999px; background: #7d8792; flex: 0 0 auto; }
+  .dot.ok { background: #5aa86a; }
+  .dot.bad { background: #d9633f; }
+
+  .switch {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
+    background: rgba(255,255,255,0.06); border-radius: 8px; padding: 3px;
+  }
+  .switch button {
+    appearance: none; border: 0; padding: 10px 8px; border-radius: 6px;
+    background: transparent; color: #9aa4b0; font-size: 13px; font-weight: 600;
+  }
+  .switch button.active { background: #2f9e77; color: #07100f; }
+
+  main {
+    flex: 1 1 auto; position: relative; min-height: 0;
+    background:
+      radial-gradient(circle at 1px 1px, rgba(255,255,255,0.07) 1px, transparent 0) 0 0/28px 28px;
+    touch-action: none;
+  }
+  .hint {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    text-align: center; padding: 24px; color: #6b7683; font-size: 13px; line-height: 1.5;
+    pointer-events: none;
+  }
+  .flash {
+    position: absolute; width: 46px; height: 46px; margin: -23px 0 0 -23px;
+    border-radius: 999px; border: 2px solid #2f9e77; opacity: 0;
+    pointer-events: none;
+  }
+  .flash.show { animation: pulse 0.32s ease-out; }
+  @keyframes pulse { from { transform: scale(0.4); opacity: 0.9; } to { transform: scale(1.4); opacity: 0; } }
+
+  footer {
+    flex: 0 0 auto; padding: 8px 12px max(8px, env(safe-area-inset-bottom));
+    font-size: 11px; color: #6b7683; text-align: center;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="status"><span class="dot" id="dot"></span><span id="statusText">Connecting…</span></div>
+    <div class="switch">
+      <button id="modeTrackpad" class="active">Trackpad</button>
+      <button id="modeNav">3D Navigation</button>
+    </div>
+  </header>
+
+  <main id="pad">
+    <div class="hint" id="hint">
+      1 finger: move / orbit &nbsp;·&nbsp; 1 tap: click &nbsp;·&nbsp;
+      2 fingers: scroll / pan &nbsp;·&nbsp; 2 taps: right-click &nbsp;·&nbsp; pinch: zoom
+    </div>
+  </main>
+
+  <footer id="sessionLabel">no session</footer>
+
+<script>
+(function () {
+  var params = new URLSearchParams(location.search);
+  var session = params.get('session');
+  var pad = document.getElementById('pad');
+  var hint = document.getElementById('hint');
+  var dot = document.getElementById('dot');
+  var statusText = document.getElementById('statusText');
+  var sessionLabel = document.getElementById('sessionLabel');
+  var btnTrackpad = document.getElementById('modeTrackpad');
+  var btnNav = document.getElementById('modeNav');
+
+  var mode = 'trackpad'; // 'trackpad' | 'nav'
+  btnTrackpad.onclick = function () { setMode('trackpad'); };
+  btnNav.onclick = function () { setMode('nav'); };
+  function setMode(next) {
+    mode = next;
+    btnTrackpad.classList.toggle('active', mode === 'trackpad');
+    btnNav.classList.toggle('active', mode === 'nav');
+  }
+
+  if (!session) {
+    statusText.textContent = 'No session — open this page from the desktop app QR code';
+    sessionLabel.textContent = '';
+  } else {
+    sessionLabel.textContent = 'session ' + session.slice(0, 8);
+  }
+
+  // ---- WebSocket, with auto-reconnect (phone screen lock / backgrounding drops it) ----
+  var ws = null;
+  var reconnectDelay = 1000;
+  function connect() {
+    if (!session) return;
+    var proto = location.protocol === 'https:' ? 'wss' : 'ws';
+    ws = new WebSocket(proto + '://' + location.host + '/remote/ws?session=' + encodeURIComponent(session) + '&role=phone');
+    ws.onopen = function () { reconnectDelay = 1000; };
+    ws.onmessage = function (ev) {
+      var msg;
+      try { msg = JSON.parse(ev.data); } catch (e) { return; }
+      if (msg.type === 'connected') {
+        setStatus('waiting', 'Connected — waiting for the desktop app');
+      } else if (msg.type === 'status') {
+        setStatus(msg.phoneConnected === false ? 'waiting' : (msg.phoneConnected ? 'ok' : 'waiting'),
+          msg.phoneConnected ? 'Connected to desktop' : 'Desktop app not open');
+      }
+    };
+    ws.onclose = function () {
+      setStatus('bad', 'Disconnected — retrying…');
+      ws = null;
+      setTimeout(connect, reconnectDelay);
+      reconnectDelay = Math.min(reconnectDelay * 1.5, 8000);
+    };
+    ws.onerror = function () { if (ws) ws.close(); };
+  }
+  function setStatus(kind, text) {
+    dot.className = 'dot' + (kind === 'ok' ? ' ok' : kind === 'bad' ? ' bad' : '');
+    statusText.textContent = text;
+  }
+  function send(msg) {
+    if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg));
+  }
+  connect();
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden && (!ws || ws.readyState > 1)) connect();
+  });
+
+  // ---- gesture recognition ----
+  var TAP_MAX_MOVE = 12;       // px — beyond this, it's a drag, not a tap
+  var TAP_MAX_DURATION = 280;  // ms
+  var TRACKPAD_SENSITIVITY = 1.6;
+  var NAV_ORBIT_SENSITIVITY = 1.0;
+  var NAV_PAN_SENSITIVITY = 1.2;
+  var NAV_ZOOM_SENSITIVITY = 1.0;
+
+  var touchState = null; // { startTime, maxTouches, moved, last: [{x,y}], lastDist }
+
+  function centroid(touches) {
+    var x = 0, y = 0;
+    for (var i = 0; i < touches.length; i++) { x += touches[i].clientX; y += touches[i].clientY; }
+    return { x: x / touches.length, y: y / touches.length };
+  }
+  function distance(touches) {
+    if (touches.length < 2) return 0;
+    var dx = touches[0].clientX - touches[1].clientX;
+    var dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+  function flashAt(x, y) {
+    var el = document.createElement('div');
+    el.className = 'flash';
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    pad.appendChild(el);
+    requestAnimationFrame(function () { el.classList.add('show'); });
+    setTimeout(function () { el.remove(); }, 340);
+  }
+
+  pad.addEventListener('touchstart', function (e) {
+    hint.style.display = 'none';
+    var c = centroid(e.touches);
+    touchState = {
+      startTime: Date.now(),
+      maxTouches: e.touches.length,
+      moved: false,
+      lastX: c.x,
+      lastY: c.y,
+      lastDist: distance(e.touches),
+      dragActive: false,
+    };
+  }, { passive: true });
+
+  pad.addEventListener('touchmove', function (e) {
+    e.preventDefault();
+    if (!touchState) return;
+    var c = centroid(e.touches);
+    var dx = c.x - touchState.lastX;
+    var dy = c.y - touchState.lastY;
+    var dist = distance(e.touches);
+
+    if (Math.abs(dx) + Math.abs(dy) > TAP_MAX_MOVE) touchState.moved = true;
+
+    if (mode === 'trackpad') {
+      if (e.touches.length === 1) {
+        send({ mode: 'trackpad', type: 'move', dx: dx * TRACKPAD_SENSITIVITY, dy: dy * TRACKPAD_SENSITIVITY });
+      } else if (e.touches.length >= 2) {
+        send({ mode: 'trackpad', type: 'scroll', dx: dx, dy: dy });
+      }
+    } else {
+      if (e.touches.length === 1) {
+        if (!touchState.dragActive) { send({ mode: 'nav', type: 'orbit-start' }); touchState.dragActive = true; }
+        send({ mode: 'nav', type: 'orbit-move', dx: dx * NAV_ORBIT_SENSITIVITY, dy: dy * NAV_ORBIT_SENSITIVITY });
+      } else if (e.touches.length >= 2) {
+        var distDelta = dist - touchState.lastDist;
+        var panMove = Math.abs(dx) + Math.abs(dy);
+        if (Math.abs(distDelta) > panMove) {
+          send({ mode: 'nav', type: 'zoom', delta: distDelta * NAV_ZOOM_SENSITIVITY });
+        } else {
+          if (!touchState.dragActive) { send({ mode: 'nav', type: 'pan-start' }); touchState.dragActive = true; }
+          send({ mode: 'nav', type: 'pan-move', dx: dx * NAV_PAN_SENSITIVITY, dy: dy * NAV_PAN_SENSITIVITY });
+        }
+      }
+    }
+
+    touchState.lastX = c.x;
+    touchState.lastY = c.y;
+    touchState.lastDist = dist;
+  }, { passive: false });
+
+  pad.addEventListener('touchend', function (e) {
+    if (!touchState) return;
+    var duration = Date.now() - touchState.startTime;
+    var isTap = !touchState.moved && duration < TAP_MAX_DURATION && e.touches.length === 0;
+
+    if (isTap) {
+      var x = touchState.lastX, y = touchState.lastY;
+      flashAt(x, y);
+      if (mode === 'trackpad') {
+        if (touchState.maxTouches === 1) send({ mode: 'trackpad', type: 'click' });
+        else if (touchState.maxTouches === 2) send({ mode: 'trackpad', type: 'rightclick' });
+      }
+    } else if (mode === 'nav' && touchState.dragActive && e.touches.length === 0) {
+      send({ mode: 'nav', type: touchState.maxTouches >= 2 ? 'pan-end' : 'orbit-end' });
+    }
+
+    if (e.touches.length === 0) touchState = null;
+  }, { passive: true });
+
+  pad.addEventListener('touchcancel', function () {
+    if (touchState && touchState.dragActive) send({ mode: 'nav', type: touchState.maxTouches >= 2 ? 'pan-end' : 'orbit-end' });
+    touchState = null;
+  }, { passive: true });
+
+  // Stop the browser chrome from doing its own thing with these gestures.
+  document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+})();
+</script>
+</body>
+</html>

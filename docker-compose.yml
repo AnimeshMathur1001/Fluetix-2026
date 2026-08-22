@@ -1,0 +1,25 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    volumes:
+      # Persists services/design_history.py's real-solve log (and therefore
+      # the quick-estimate feature's accuracy) across container rebuilds —
+      # without this, every `docker compose up --build` silently resets it.
+      - design_history:/app/app/data
+
+  frontend:
+    build:
+      context: .
+      args:
+        VITE_API_BASE_URL: http://localhost:8000
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  design_history:
