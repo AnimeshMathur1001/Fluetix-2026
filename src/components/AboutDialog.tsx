@@ -62,6 +62,15 @@ export default function AboutDialog() {
               real cyclic-boundary solve. Fluid properties fall back to engineering correlations when
               the connected property database isn't reachable.
             </div>
+            <div className="mt-3.5 border-t border-line2 pt-3 text-tiny text-mute2">
+              <div className="mb-1 font-semibold text-mute">Fluetix</div>
+              <div>Author: Animesh Mathur</div>
+              <div>Co-Authors: Arihant Kumar Singh, Aviral Gupta</div>
+              <div className="mt-1.5">
+                &copy; 2026 Animesh Mathur, Arihant Kumar Singh, Aviral Gupta. Licensed under the
+                Apache License, Version 2.0. See LICENSE and NOTICE.
+              </div>
+            </div>
           </motion.div>
         </motion.div>
       )}

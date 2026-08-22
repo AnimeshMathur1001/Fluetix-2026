@@ -9,7 +9,12 @@ numpy>=1.26
 psutil>=5.9
 jinja2>=3.1
 weasyprint>=60.0
+matplotlib>=3.8
+scipy>=1.11
 
-# Optional — the app degrades gracefully (see README) if these aren't installed.
-# scikit-image   # real marching-cubes surface extraction for POST /geometry/lattice
-# CoolProp       # real equation-of-state fluid properties for GET /properties
+# The app degrades gracefully (see README) if these two aren't installed —
+# still listed as real requirements here (rather than commented out) so a
+# packaged install gets the full feature set (real marching-cubes geometry
+# extraction, real CoolProp fluid properties) out of the box.
+scikit-image>=0.22
+CoolProp>=6.6

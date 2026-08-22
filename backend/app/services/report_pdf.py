@@ -180,7 +180,7 @@ TEMPLATE = Template(r"""
     margin: 20mm 16mm 18mm 16mm;
     @bottom-center { content: "Page " counter(page) " of " counter(pages); font-size: 8pt; color: #888; }
     @bottom-left { content: "{{ req.caseName }}"; font-size: 8pt; color: #888; }
-    @bottom-right { content: "Fluetix"; font-size: 8pt; color: #888; }
+    @bottom-right { content: "Fluetix — A. Mathur, A. K. Singh, A. Gupta"; font-size: 8pt; color: #888; }
   }
   * { box-sizing: border-box; }
   body { font-family: "Liberation Serif", Georgia, serif; color: #1a1a1a; font-size: 10.5pt; line-height: 1.45; }
@@ -238,7 +238,8 @@ TEMPLATE = Template(r"""
     Hot: {{ req.hot.fluid }} @ {{ req.hot.Tin }} &deg;C &middot; Cold: {{ req.cold.fluid }} @ {{ req.cold.Tin }} &deg;C &middot;
     Solid: {{ req.solid.mat }}<br>
     {% if solved %}Includes real solved-field results (t={{ solved.time }}).
-    {% else %}Analytical (&epsilon;-NTU) model only — no completed solve on record for this case.{% endif %}
+    {% else %}Analytical (&epsilon;-NTU) model only — no completed solve on record for this case.{% endif %}<br>
+    Fluetix &middot; Author: Animesh Mathur &middot; Co-Authors: Arihant Kumar Singh, Aviral Gupta
   </div>
 
   <div class="kpis" style="text-align:left;margin-top:36pt;">

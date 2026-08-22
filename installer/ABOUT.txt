@@ -1,0 +1,33 @@
+Fluetix — TPMS Lattice Heat Exchanger Design Workspace
+
+Author:      Animesh Mathur
+Co-Authors:  Arihant Kumar Singh, Aviral Gupta
+
+Copyright 2026 Animesh Mathur, Arihant Kumar Singh, Aviral Gupta
+Licensed under the Apache License, Version 2.0.
+
+This installer will:
+
+  1. Check for Python 3.10+ and install it automatically via winget
+     (Windows Package Manager) if it isn't already present.
+  2. Check for the GTK3 runtime (required for PDF report generation)
+     and install it automatically via winget if missing.
+  3. Create a private Python virtual environment inside the install
+     folder and install every required Python package into it —
+     nothing is installed into your system Python.
+  4. Install Fluetix itself (front end + backend) and create Start
+     Menu / Desktop shortcuts.
+
+An internet connection is required for steps 1-3. No purchase, account,
+subscription, or payment of any kind is involved anywhere in this process
+— every component installed is free and open source.
+
+Uninstalling Fluetix later removes the application, its virtual
+environment, and its shortcuts. Python and the GTK3 runtime are left
+in place, since other software on your system may also depend on them
+— this is standard behavior for shared system components.
+
+See LICENSE and NOTICE (installed alongside the application) for the
+full license text and required attribution notice. Redistributing or
+modifying this software requires keeping the author and co-author
+names above attached, per the Apache License, Version 2.0, Section 4.

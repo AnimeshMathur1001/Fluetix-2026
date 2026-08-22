@@ -1,5 +1,8 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from .routers import compare, estimate, explorer, geometry, mesh, mesh_independence, properties, remote, report, results, solve, sweep, uncertainty
 from .services import job_state, queue
@@ -7,7 +10,15 @@ from .services.foam import openfoam_available
 from .services.fluid_properties import HAVE_COOLPROP
 from .services.tpms import HAVE_SKIMAGE
 
-app = FastAPI(title="Fluetix", version="0.2.0")
+app = FastAPI(
+    title="Fluetix",
+    version="0.2.0",
+    description=(
+        "TPMS lattice heat exchanger design workspace.\n\n"
+        "Author: Animesh Mathur. Co-Authors: Arihant Kumar Singh, Aviral Gupta.\n"
+        "Licensed under the Apache License, Version 2.0 — see LICENSE and NOTICE."
+    ),
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -53,6 +64,17 @@ def queue_status() -> dict:
     (services/job_state.py) — what the frontend's execution-status indicator
     shows instead of the old decorative local/remote toggle."""
     return {**queue.status(), "sessions": job_state.session_count()}
+
+
+# Installed (and packaged-for-distribution) builds ship the front end's
+# production `npm run build` output alongside the backend at ../../dist —
+# mounted last so it only ever catches requests no API route above already
+# matched. Absent in a plain source checkout that hasn't been built, in
+# which case the front end is expected to be served separately (`npm run
+# dev`), same as this project always worked before packaging existed.
+_DIST_DIR = Path(__file__).resolve().parent.parent.parent / "dist"
+if _DIST_DIR.is_dir():
+    app.mount("/", StaticFiles(directory=_DIST_DIR, html=True), name="frontend")
 
 
 if __name__ == "__main__":

@@ -7,7 +7,18 @@ Two parts: this repo root is the React/Three.js **front end**; `backend/` is a F
 that does the geometry/mesh/property/CFD work no browser can do natively — see
 [backend/README.md](backend/README.md) for exactly what's real there versus a labelled placeholder.
 
-## Run the whole thing (recommended)
+Author: Animesh Mathur. Co-Authors: Arihant Kumar Singh, Aviral Gupta.
+Licensed under the [Apache License, Version 2.0](LICENSE) — see also [NOTICE](NOTICE).
+
+## Windows installer
+
+For a normal user who just wants to run the app — no `git clone`, no manual dependency install —
+see [installer/README.md](installer/README.md). It builds a single `Fluetix-2026-Setup.exe` that
+auto-installs Python and the GTK3 runtime (via `winget`) if missing, sets up a private Python
+environment for the app, and adds Start Menu / Desktop shortcuts. Everything it installs is free
+and open source.
+
+## Run the whole thing (recommended, for development)
 
 ```bash
 docker compose up --build

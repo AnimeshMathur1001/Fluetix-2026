@@ -11,4 +11,8 @@ backend/__pycache__
 backend/**/__pycache__
 backend/app/data/*.jsonl
 
+installer/output
+venv
+run
+
 .claude/settings.local.json

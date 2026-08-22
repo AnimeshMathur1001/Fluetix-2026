@@ -4,6 +4,12 @@
   "version": "0.7.0",
   "type": "module",
   "description": "Desktop-style front end for TPMS lattice heat exchanger design and CFD case setup.",
+  "author": "Animesh Mathur",
+  "contributors": [
+    "Arihant Kumar Singh",
+    "Aviral Gupta"
+  ],
+  "license": "Apache-2.0",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

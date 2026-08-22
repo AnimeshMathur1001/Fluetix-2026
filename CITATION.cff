@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Fluetix: TPMS Lattice Heat Exchanger Design Workspace"
+type: software
+authors:
+  - family-names: "Mathur"
+    given-names: "Animesh"
+  - family-names: "Singh"
+    given-names: "Arihant Kumar"
+  - family-names: "Gupta"
+    given-names: "Aviral"
+license: Apache-2.0
+repository-code: "https://github.com/AnimeshMathur1001/Fluetix-2026"
+date-released: 2026-01-01
+keywords:
+  - heat-exchanger
+  - TPMS
+  - lattice
+  - CFD
+  - conjugate-heat-transfer
