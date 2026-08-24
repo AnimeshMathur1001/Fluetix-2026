@@ -75,17 +75,17 @@ export default function GeometryPanel() {
           'application/step',
         );
         s.set({ busy: null });
-        s.flash('STEP written — faceted B-Rep, ' + formatInt(s.stats.triangles) + ' faces');
+        s.flash('STEP written – faceted B-Rep, ' + formatInt(s.stats.triangles) + ' faces');
       }, 900);
       return;
     }
     if (s.exportFormat === 'obj') {
       const n = exportOBJ(s.caseName + '.obj', geometryCache.positions, geometryCache.indices);
-      s.flash('OBJ written — ' + formatInt(n) + ' triangles');
+      s.flash('OBJ written – ' + formatInt(n) + ' triangles');
       return;
     }
     const n = exportSTL(s.caseName + '.stl', geometryCache.positions, geometryCache.indices);
-    s.flash('STL written — ' + formatInt(n) + ' triangles');
+    s.flash('STL written – ' + formatInt(n) + ' triangles');
   };
 
   return (
@@ -98,11 +98,11 @@ export default function GeometryPanel() {
       <SliderInput label="Unit cell X" unit="mm" min={3} max={25} step={0.5} value={s.cellX} onChange={(v) => s.setLattice({ cellX: v })} />
       <SliderInput label="Unit cell Y" unit="mm" min={3} max={25} step={0.5} value={s.cellY} onChange={(v) => s.setLattice({ cellY: v })} />
       <SliderInput label="Unit cell Z" unit="mm" min={3} max={25} step={0.5} value={s.cellZ} onChange={(v) => s.setLattice({ cellZ: v })} hint="Flow direction" />
-      <SliderInput label="Wall thickness" unit="mm" min={0.2} max={3} step={0.05} value={s.thickness} onChange={(v) => s.setLattice({ thickness: v })} hint="Isosurface offset — |f| < c" />
+      <SliderInput label="Wall thickness" unit="mm" min={0.2} max={3} step={0.05} value={s.thickness} onChange={(v) => s.setLattice({ thickness: v })} hint="Isosurface offset – |f| < c" />
       <SliderInput label="Thickness gradient" unit="−1 … 1" min={-0.8} max={0.8} step={0.05} value={s.grading} onChange={(v) => s.setLattice({ grading: v })} hint={gradingHint} />
-      <SliderInput label="Cells X" unit="—" min={1} max={10} step={1} value={s.nx} onChange={(v) => s.setLattice({ nx: v })} />
-      <SliderInput label="Cells Y" unit="—" min={1} max={10} step={1} value={s.ny} onChange={(v) => s.setLattice({ ny: v })} />
-      <SliderInput label="Cells Z" unit="—" min={1} max={10} step={1} value={s.nz} onChange={(v) => s.setLattice({ nz: v })} hint={'Total ' + s.nx * s.ny * s.nz + ' unit cells'} />
+      <SliderInput label="Cells X" unit="–" min={1} max={10} step={1} value={s.nx} onChange={(v) => s.setLattice({ nx: v })} />
+      <SliderInput label="Cells Y" unit="–" min={1} max={10} step={1} value={s.ny} onChange={(v) => s.setLattice({ ny: v })} />
+      <SliderInput label="Cells Z" unit="–" min={1} max={10} step={1} value={s.nz} onChange={(v) => s.setLattice({ nz: v })} hint={'Total ' + s.nx * s.ny * s.nz + ' unit cells'} />
 
       <div className="mb-3 mt-4">
         <div className="mb-1.5 text-smx text-dim">Grading axis</div>
@@ -130,7 +130,7 @@ export default function GeometryPanel() {
       </div>
       <div className="mb-4 text-xxs leading-relaxed text-mute3">
         Preview is {VOXELS_PREVIEW}³ voxels/cell, full is {VOXELS_FULL}³. Nothing regenerates until you
-        click Generate — sliders only edit the draft below.
+        click Generate – sliders only edit the draft below.
       </div>
 
       <div className="mb-4 rounded-md border border-line2 bg-card p-3">
@@ -143,7 +143,7 @@ export default function GeometryPanel() {
         <MetricRow label="Est. time" value={estSeconds + ' s'} />
         {downscaled ? (
           <div className="mt-1 text-xxs leading-relaxed text-warn">
-            {nextVoxels}³/cell — auto-downscaled from {baseVoxels}³ to stay interactive at{' '}
+            {nextVoxels}³/cell – auto-downscaled from {baseVoxels}³ to stay interactive at{' '}
             {draft.nx * draft.ny * draft.nz} cells.
           </div>
         ) : null}
@@ -160,12 +160,12 @@ export default function GeometryPanel() {
           ) : null}
         </div>
         <div className={'mt-2 text-xxs leading-relaxed ' + (dirty ? 'text-warn' : 'text-ok')}>
-          {dirty ? 'Parameters changed — viewport shows the last generated geometry.' : 'Viewport is up to date.'}
+          {dirty ? 'Parameters changed – viewport shows the last generated geometry.' : 'Viewport is up to date.'}
         </div>
       </div>
 
       <div className="border-t border-line pt-4">
-        <SectionTitle>Export — lattice wall</SectionTitle>
+        <SectionTitle>Export – lattice wall</SectionTitle>
         <MetricRow label="Triangles" value={formatInt(s.stats.triangles)} />
         <MetricRow label="Solid fraction φ" value={(s.stats.solidFraction * 100).toFixed(1) + ' %'} />
         <MetricRow label="Specific area" value={s.stats.specificArea.toFixed(0) + ' m²/m³'} />
@@ -192,7 +192,7 @@ export default function GeometryPanel() {
           </ActionButton>
         </div>
         <div className="mt-2 text-xxs leading-relaxed text-mute3">
-          STL/OBJ are the primary formats — both import cleanly everywhere. STEP is written as a
+          STL/OBJ are the primary formats – both import cleanly everywhere. STEP is written as a
           best-effort tessellated B-Rep: TPMS surfaces are not NURBS-representable, so faceting is
           expected, and some CAD packages may still be picky about it. No .sldprt export.
         </div>

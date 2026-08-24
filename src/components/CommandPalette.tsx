@@ -47,7 +47,7 @@ export default function CommandPalette() {
       { id: 'solve', label: 'Run solve', group: 'Pipeline', keywords: 'simulate cfd', run: solver.start },
       { id: 'cancel-solve', label: 'Cancel solve', group: 'Pipeline', run: solver.cancel },
       { id: 'save', label: 'Save case to disk', group: 'Project', keywords: 'export json', run: exportProjectFile },
-      { id: 'new-case', label: 'Start new case', group: 'Project', keywords: 'reset clear blank', run: () => { if (window.confirm('Start a new case? Any unsaved changes are lost — use Save case to disk first if you want to keep them.')) startNewCase(); } },
+      { id: 'new-case', label: 'Start new case', group: 'Project', keywords: 'reset clear blank', run: () => { if (window.confirm('Start a new case? Any unsaved changes are lost – use Save case to disk first if you want to keep them.')) startNewCase(); } },
       { id: 'focus', label: 'Toggle focus mode', group: 'View', keywords: 'maximize viewport', run: toggleFocusMode },
       { id: 'panel', label: panelOpen ? 'Collapse parameter panel' : 'Show parameter panel', group: 'View', run: () => set({ panelOpen: !panelOpen }) },
       { id: 'about', label: 'About this build', group: 'Help', run: () => set({ aboutOpen: true }) },

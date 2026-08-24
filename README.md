@@ -72,7 +72,7 @@ src/
 │   ├── useLatticeGeometry.ts   field → surface extraction → BufferGeometry (+ contours)
 │   ├── usePhysics.ts           memoised unit-cell performance and scale-up
 │   ├── useSolver.ts            residual stream, convergence / cancel handling
-│   ├── useTasks.ts             staged progress for fill, mesh, sweeps, validation, import
+│   ├── useTasks.ts             staged progress for fill, mesh, import
 │   └── useDebounced.ts
 ├── lib/
 │   ├── tpms.ts                 gyroid / Schwarz-P / Diamond / IWP level sets, scalar field,
@@ -112,7 +112,7 @@ for exactly which hook calls which endpoint. Summary:
 
 | Module | Wired to |
 | --- | --- |
-| `hooks/useTasks.ts` | `POST /mesh`, `POST /validate`, `POST /sweep` |
+| `hooks/useTasks.ts` | `POST /mesh`, `POST /validate` |
 | `hooks/useSolver.ts` | `WS /solve` — real when the backend + OpenFOAM are up, in-browser decay stand-in otherwise |
 | `hooks/useBackendResultsSync.ts` | `POST /cases/:id` + `GET /results/:id` — cross-checked against `lib/physics.ts`, shown in Results panel |
 | `hooks/useLatticeGeometry.ts` | `POST /solve/field` — real OpenFOAM T/U/p sampled onto the rendered surface when a solve has completed and the Results panel's "Solved field (OpenFOAM)" toggle is selected; the analytical model in `lib/contours.ts` otherwise |
@@ -126,8 +126,10 @@ Every wired call falls back to its original in-browser approximation when the ba
 (`backend: offline` in the footer) — `lib/fluidProperties.ts` (Vogel/Sutherland correlations) still
 exists and still runs, it's just no longer the only option. CoolProp, OpenFOAM, Gmsh, CGAL and
 OpenCASCADE are native/Python libraries with no browser build, which is why this split exists at all.
-The mesh-independence / GCI study stays removed from the Results and Mesh panels — it would need a
-real multi-resolution sweep, which isn't implemented (`POST /sweep` is still a synthetic placeholder).
+The mesh-independence / GCI study (`WS /mesh-independence`, Mesh & Solve step) is real and backend-only
+— it reruns the full mesh+solve pipeline at each requested resolution and reports a genuine Grid
+Convergence Index (Celik et al. procedure); it needs a live backend with OpenFOAM reachable and has no
+in-browser stand-in, so it shows a persistent in-panel error rather than a result when disconnected.
 `POST /mesh` and `WS /solve` are real — full blockMesh/snappyHexMesh/splitMeshRegions pipeline and a
 real streamed `chtMultiRegionSimpleFoam` solve — when OpenFOAM is available (see backend README).
 
@@ -152,5 +154,7 @@ solved case (see backend README § Design intelligence for the mechanism):
 ## Out of scope
 
 No native SolidWorks export, no GPU-accelerated solve, steady-state only, single-phase only, no FEA.
-The periodicity/block-independence check (`POST /sweep`) is still a synthetic placeholder — real
-mesh-independence (`WS /mesh-independence`) is a separate, already-real check.
+No periodicity/block-independence check and no reference-case validation against a correlation — both
+used to exist as UI sections that showed fabricated numbers without running any real solve, and were
+removed entirely rather than kept as placeholders. Real mesh-independence (`WS /mesh-independence`)
+is a separate, already-real check and is unaffected.

@@ -12,6 +12,7 @@ import { SOLID_PROPERTY_NOTE } from '../../lib/solidProperties';
 import { flowRecommendation, solidConductivityNote } from '../../lib/recommendations';
 import { useAppStore } from '../../store/useAppStore';
 import { usePhysics } from '../../hooks/usePhysics';
+import { fromDisplayTemp, toDisplayTemp, tempUnitLabel } from '../../lib/utils';
 import type { Stream } from '../../lib/types';
 
 interface FieldSpec {
@@ -93,6 +94,7 @@ function SaveAsMaterial({ onSave }: { onSave: (name: string) => void }) {
 
 function StreamCard({ which }: { which: 'hot' | 'cold' }) {
   const stream = useAppStore((s) => s[which]);
+  const tempUnit = useAppStore((s) => s.tempUnit);
   const faces = useAppStore((s) => s.faces);
   const setStream = useAppStore((s) => s.setStream);
   const setStreamTemperature = useAppStore((s) => s.setStreamTemperature);
@@ -135,7 +137,7 @@ function StreamCard({ which }: { which: 'hot' | 'cold' }) {
           {which === 'hot' ? 'Hot stream' : 'Cold stream'}
         </span>
         <div className="flex-1" />
-        <span className="font-mono text-2xs text-mute2">{tagged || '—'}</span>
+        <span className="font-mono text-2xs text-mute2">{tagged || '–'}</span>
       </div>
 
       <SearchableSelect
@@ -155,10 +157,10 @@ function StreamCard({ which }: { which: 'hot' | 'cold' }) {
           align="right"
           className="w-[78px]"
           step={1}
-          value={stream.Tin}
-          onChange={(v) => setStreamTemperature(which, v)}
+          value={toDisplayTemp(stream.Tin, tempUnit)}
+          onChange={(v) => setStreamTemperature(which, fromDisplayTemp(v, tempUnit))}
         />
-        <span className="w-[52px] font-mono text-2xs text-mute3">°C</span>
+        <span className="w-[52px] font-mono text-2xs text-mute3">{tempUnitLabel(tempUnit)}</span>
       </div>
 
       {STREAM_FIELDS.map((f) => (
@@ -179,7 +181,7 @@ function StreamCard({ which }: { which: 'hot' | 'cold' }) {
           ρ/μ/cₚ/k recomputed automatically from inlet temperature and outlet pressure
           {auto_isLegacy
             ? ' (instant local estimate, upgraded to a verified value once connected).'
-            : ' via the connected physical-property database — needs a live connection.'}
+            : ' via the connected physical-property database – needs a live connection.'}
         </div>
       ) : null}
       <SaveAsMaterial onSave={(name) => saveCustomFluid(which, name)} />
@@ -228,7 +230,7 @@ export default function CasePanel() {
       <div className="mb-3 rounded-md border border-line2 bg-card p-3">
         <div className="mb-2.5 flex items-center gap-2">
           <span className="h-2 w-2 rounded-[2px] bg-dim2" />
-          <span className="whitespace-nowrap text-med font-semibold">Solid — lattice wall</span>
+          <span className="whitespace-nowrap text-med font-semibold">Solid – lattice wall</span>
         </div>
         <SearchableSelect
           className="mb-2.5"
@@ -246,10 +248,10 @@ export default function CasePanel() {
             align="right"
             className="w-[78px]"
             step={5}
-            value={s.solidRefTempC}
-            onChange={(v) => s.setSolidRefTemp(v)}
+            value={toDisplayTemp(s.solidRefTempC, s.tempUnit)}
+            onChange={(v) => s.setSolidRefTemp(fromDisplayTemp(v, s.tempUnit))}
           />
-          <span className="w-[52px] font-mono text-2xs text-mute3">°C</span>
+          <span className="w-[52px] font-mono text-2xs text-mute3">{tempUnitLabel(s.tempUnit)}</span>
         </div>
         {([
           { label: 'Conductivity k', key: 'k', unit: 'W/m·K', step: 1 },
@@ -326,7 +328,7 @@ export default function CasePanel() {
         <div className="mt-1.5 text-xxs leading-relaxed text-mute3">
           {s.mode === 'unitcell'
             ? 'Cyclic patches make the block behave as an infinite repeating lattice.'
-            : 'Full-assembly mode — no cyclic patches applied.'}
+            : 'Full-assembly mode – no cyclic patches applied.'}
         </div>
       </div>
 
@@ -357,7 +359,7 @@ export default function CasePanel() {
       />
       <div className="mt-2 text-xxs leading-relaxed text-mute3">
         Saves geometry, regions, materials and solver settings to a JSON file on disk. Mesh &amp; solve
-        results aren&apos;t included — re-run them after loading.
+        results aren&apos;t included – re-run them after loading.
       </div>
     </div>
   );

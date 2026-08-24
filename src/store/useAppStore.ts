@@ -16,7 +16,6 @@ import {
 } from '../lib/projectFile';
 import type {
   Axis,
-  BlockCheckResult,
   BusyState,
   ClipAxis,
   CoreTarget,
@@ -41,11 +40,11 @@ import type {
   Quality,
   RegionKey,
   SolidMaterial,
+  SolvedPerformance,
   Stream,
   SurfaceType,
   TurbulenceModel,
   UncertaintyState,
-  ValidationResult,
   WatertightReport,
 } from '../lib/types';
 
@@ -67,6 +66,12 @@ export interface AppState {
   remotePhoneConnected: boolean;
   busy: BusyState | null;
   caseName: string;
+  /** Display-only preference: everything is still stored/computed in Celsius
+   *  internally (lib/fluidProperties.ts and every physics calc), this only
+   *  controls how temperatures are shown and edited in the UI — see
+   *  lib/utils.ts's toDisplayTemp/fromDisplayTemp. Session-only, not
+   *  persisted to the project file or localStorage. */
+  tempUnit: 'C' | 'K';
 
   /* phase 1 — lattice */
   surface: SurfaceType;
@@ -135,8 +140,6 @@ export interface AppState {
 
   /* phase 5 — scale-up */
   core: CoreTarget;
-  validation: ValidationResult | null;
-  blockCheck: BlockCheckResult | null;
   meshIndependence: MeshIndependenceState;
   reportGenerating: boolean;
 
@@ -158,6 +161,12 @@ export interface AppState {
    *  or a new solve run so stale data is never silently shown). */
   contourSource: 'analytical' | 'solved';
   solvedFieldReady: boolean;
+  /** Real solved-field-derived performance (solid T min/max, energy balance,
+   *  etc.) sent once after a converged real solve — see useSolver.ts's
+   *  handling of WS /solve's "performance" message. Distinct from
+   *  `backendPerformance` below, which is the analytical ε-NTU cross-check,
+   *  not a solved-field result. Null until a real solve has completed. */
+  backendSolvedPerformance: SolvedPerformance | null;
   /** True while hooks/useLatticeGeometry.ts's solved-field fetch is in
    *  flight — the first request per region/time can take a few real
    *  seconds (it runs an OpenFOAM postProcess subprocess server-side), so
@@ -267,6 +276,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   toast: null,
   busy: null,
   caseName: 'untitled-case-01',
+  tempUnit: 'C',
 
   surface: initialParams.surface,
   cellX: initialParams.cellX,
@@ -314,7 +324,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   nuCorrection: {
     A: 0.089,
     b: 0.50,
-    sourceNote: 'Default — edit A and b to match your geometry',
+    sourceNote: 'Default – edit A and b to match your geometry',
   },
 
   bgCells: 24,
@@ -337,8 +347,6 @@ export const useAppStore = create<AppState>((set, get) => ({
   converged: null,
 
   core: { width: 150, height: 150, length: 300, mdotHot: 0.5, mdotCold: 0.5 },
-  validation: null,
-  blockCheck: null,
   meshIndependence: {
     running: false,
     phase: 'idle',
@@ -364,6 +372,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   contourRange: null,
   contourSource: 'analytical',
   solvedFieldReady: false,
+  backendSolvedPerformance: null,
   fetchingSolvedField: false,
 
   jobStatus: 'idle',
@@ -488,7 +497,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         [slug]: { label, rho: stream.rho, mu: stream.mu, cp: stream.cp, k: stream.k, refTempC: stream.Tin },
       },
     });
-    s.flash('Saved "' + label + '" — pick it from the material list any time');
+    s.flash('Saved "' + label + '" – pick it from the material list any time');
   },
 
   saveCustomSolid: (name) => {
@@ -502,7 +511,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         [slug]: { label, k: s.solid.k, rho: s.solid.rho, cp: s.solid.cp },
       },
     });
-    s.flash('Saved "' + label + '" — pick it from the material list any time');
+    s.flash('Saved "' + label + '" – pick it from the material list any time');
   },
 
   deleteCustomFluid: (key) => {
@@ -556,7 +565,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     // Loading someone else's file always starts fresh at Geometry, regardless of
     // what step this project file's own case last left off on.
     set({ ...projectFileToPatch(project), step: 0 } as unknown as Partial<AppState>);
-    s.flash('Project loaded — re-run Mesh & Solve to get results');
+    s.flash('Project loaded – re-run Mesh & Solve to get results');
   },
 
   setPanelWidth: (width) => {

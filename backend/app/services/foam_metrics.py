@@ -77,7 +77,7 @@ def patch_average(case_dir: Path, region: RegionKey, field: FieldName, patch_nam
     time = time or latest_time_dir(case_dir)
     path = case_dir / time / region / _FIELD_FILE[field]
     if not path.exists():
-        raise FieldUnavailable(f"{path} not found — was this region actually solved?")
+        raise FieldUnavailable(f"{path} not found – was this region actually solved?")
     block = _extract_patch_block(path.read_text(), patch_name)
 
     m = _PATCH_VALUE_LIST_RE.search(block)

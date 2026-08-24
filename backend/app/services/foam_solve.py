@@ -11,7 +11,7 @@ import re
 from pathlib import Path
 from typing import AsyncIterator
 
-from .foam_case import set_max_iterations
+from .foam_case import request_final_write, set_max_iterations
 from .foam_field import FieldUnavailable, latest_time_dir, read_field
 
 _REGION_RE = re.compile(r"^Solving for (?:fluid|solid) region (\w+)")
@@ -113,6 +113,7 @@ async def run_real_solve(case_dir: Path, max_iterations: int, target: float) -> 
             "source": "openfoam",
         }
 
+    final_write_requested = False
     try:
         assert proc.stdout is not None
         async for raw in proc.stdout:
@@ -121,9 +122,17 @@ async def run_real_solve(case_dir: Path, max_iterations: int, target: float) -> 
             m = _TIME_RE.match(line)
             if m:
                 if iteration > 0:
-                    if is_converged():
-                        yield message("done")
-                        return
+                    if is_converged() and not final_write_requested:
+                        # Ask the running solver to flush its current fields to
+                        # disk and stop on its own, instead of being killed
+                        # mid-iteration with whatever happened to already be
+                        # written (often nothing but the initial `0/` state,
+                        # given writeInterval's coarse cadence — see
+                        # foam_case.request_final_write). Keep draining stdout
+                        # below until it exits by itself; the `finally` block's
+                        # terminate/kill stays as the fallback if it doesn't.
+                        request_final_write(case_dir, max_iterations)
+                        final_write_requested = True
                     yield message("running")
                 iteration = int(float(m.group(1)))
                 region = None

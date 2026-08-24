@@ -30,9 +30,9 @@ const PALETTES: Record<RegionKey, string[]> = {
 };
 
 const FLOW_EXPLANATION: Record<string, string> = {
-  counter: 'Hot and cold inlets face opposite directions on the same axis — the streams run counter-current.',
-  parallel: 'Hot and cold inlets face the same direction on the same axis — the streams run co-current.',
-  cross: 'Hot and cold inlets sit on different axes — cross-flow.',
+  counter: 'Hot and cold inlets face opposite directions on the same axis – the streams run counter-current.',
+  parallel: 'Hot and cold inlets face the same direction on the same axis – the streams run co-current.',
+  cross: 'Hot and cold inlets sit on different axes – cross-flow.',
 };
 
 export default function RegionsPanel() {
@@ -128,7 +128,7 @@ export default function RegionsPanel() {
         </div>
       )}
 
-      <SectionTitle>Regions — viewport shows all three together</SectionTitle>
+      <SectionTitle>Regions – viewport shows all three together</SectionTitle>
       {regions.map((r) => (
         <div key={r.key} className="mb-2 rounded-md border border-line2 bg-card px-2.5 py-2">
           <div className="mb-1.5 flex items-center gap-2.5">
@@ -208,7 +208,7 @@ export default function RegionsPanel() {
       <div className="mb-5 text-xxs leading-relaxed text-mute3">
         {hotInletTagged && coldInletTagged
           ? FLOW_EXPLANATION[s.flow]
-          : 'Tag an inletCold face above — arrangement is derived from the hot and cold inlet faces, not chosen manually.'}
+          : 'Tag an inletCold face above – arrangement is derived from the hot and cold inlet faces, not chosen manually.'}
       </div>
 
       <div className="border-t border-line pt-4">

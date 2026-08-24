@@ -14,7 +14,6 @@ export default function WorkflowStepper() {
   const watertight = useAppStore((s) => s.watertight);
   const meshed = useAppStore((s) => s.meshed);
   const converged = useAppStore((s) => s.converged);
-  const validation = useAppStore((s) => s.validation);
   const stats = useAppStore((s) => s.stats);
   const explorerCandidates = useAppStore((s) => s.explorer.candidates.length);
 
@@ -24,7 +23,7 @@ export default function WorkflowStepper() {
     true,
     meshed && converged === true,
     converged === true,
-    Boolean(validation),
+    converged === true,
     explorerCandidates > 0,
   ];
 

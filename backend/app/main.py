@@ -16,7 +16,7 @@ app = FastAPI(
     description=(
         "TPMS lattice heat exchanger design workspace.\n\n"
         "Author: Animesh Mathur. Co-Authors: Arihant Kumar Singh, Aviral Gupta.\n"
-        "Licensed under the Apache License, Version 2.0 — see LICENSE and NOTICE."
+        "Licensed under the Apache License, Version 2.0 – see LICENSE and NOTICE."
     ),
 )
 

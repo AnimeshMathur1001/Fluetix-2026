@@ -136,7 +136,7 @@ export default function LatticeMesh({ onBox }: LatticeMeshProps) {
     // rather than mislead. Sampling the solved field at a single clicked
     // point is real follow-up work, not done here.
     if (store.contourSource === 'solved') {
-      store.flash('Probe shows the analytical preview only — switch to "Analytical preview" to use it');
+      store.flash('Probe shows the analytical preview only – switch to "Analytical preview" to use it');
       return;
     }
     const p = event.point;

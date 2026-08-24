@@ -3,10 +3,11 @@ import { useAppStore } from '../store/useAppStore';
 import { openMeshIndependenceSocket, type MeshIndependenceMessage } from '../lib/api';
 
 /**
- * Drives WS /mesh-independence: a genuine grid-convergence study, not the
- * synthetic POST /sweep placeholder (see that endpoint's docstring — it
- * stands in for a *different*, still-unbuilt check, periodicity/block
- * independence). This reruns the real blockMesh -> snappyHexMesh ->
+ * Drives WS /mesh-independence: a genuine grid-convergence study. Distinct
+ * from periodicity/block-independence, a *different*, still-unbuilt check
+ * that used to have a fake-numbers stand-in in this app and was removed
+ * entirely rather than kept as a placeholder. This reruns the real
+ * blockMesh -> snappyHexMesh ->
  * splitMeshRegions -> chtMultiRegionSimpleFoam pipeline once per requested
  * background-mesh resolution and reports how far a solved-field-derived
  * metric (pressure drop, effectiveness) moves between resolutions.
@@ -22,7 +23,9 @@ export function useMeshIndependence() {
   const start = useCallback((levels: number[]) => {
     const s = useAppStore.getState();
     if (!s.backend.available) {
-      s.flash('Mesh independence needs a live connection — not available as an in-browser stand-in');
+      const error = 'Mesh independence needs a live connection to the backend and a working OpenFOAM install (see backend/README.md) – not available as an in-browser stand-in';
+      s.set({ meshIndependence: { ...s.meshIndependence, running: false, phase: 'failed', error } });
+      s.flash(error);
       return;
     }
     if (s.meshIndependence.running) return;
@@ -92,7 +95,7 @@ export function useMeshIndependence() {
       } else if (msg.phase === 'failed') {
         if (msg.level != null) patchLevel(msg.level, { phase: 'failed' });
         st.set({ meshIndependence: { ...st.meshIndependence, running: false, phase: 'failed', error: msg.error } });
-        st.flash('Mesh independence study failed' + (msg.level != null ? ' at level ' + msg.level : '') + ' — ' + msg.error);
+        st.flash('Mesh independence study failed' + (msg.level != null ? ' at level ' + msg.level : '') + ' – ' + msg.error);
         ws.close();
       } else if (msg.phase === 'complete') {
         st.set({
@@ -105,14 +108,14 @@ export function useMeshIndependence() {
             gciRows: msg.convergence?.rows ?? null,
           },
         });
-        st.flash('Mesh independence study complete — ' + msg.levels.length + ' resolutions run');
+        st.flash('Mesh independence study complete – ' + msg.levels.length + ' resolutions run');
       }
     };
 
     ws.onerror = () => {
       const st = useAppStore.getState();
       st.set({ meshIndependence: { ...st.meshIndependence, running: false, phase: 'failed', error: 'WS /mesh-independence unreachable' } });
-      st.pushLog('not connected — mesh independence needs a live connection', 'warn');
+      st.pushLog('not connected – mesh independence needs a live connection', 'warn');
     };
 
     ws.onclose = () => {

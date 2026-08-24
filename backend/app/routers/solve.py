@@ -22,6 +22,7 @@ behaviour.
 from __future__ import annotations
 
 import asyncio
+import logging
 import math
 import random
 from pathlib import Path
@@ -38,6 +39,7 @@ from ..services.foam_solve import run_real_solve
 from ..services.queue import solve_queue
 
 router = APIRouter(tags=["solve"])
+logger = logging.getLogger(__name__)
 
 DECAY = {"ux": 150, "p": 110, "hHot": 190, "hCold": 185, "hSolid": 340}
 START = {"ux": 0.9, "p": 1.0, "hHot": 0.6, "hCold": 0.55, "hSolid": 0.5}
@@ -78,10 +80,15 @@ async def _run_real(ws: WebSocket, case_dir: Path, max_iterations: int, target: 
     If the caller included the full case spec on its start message (`faces`/
     `hot`/`cold`/`solid`/geometry — optional, older clients can omit it and
     solving still works exactly as before), a converged run's real
-    solved-field performance is logged to services/design_history.py once —
-    the same training data services/surrogate.py's quick-estimate feature
-    reads from. Best-effort: any failure here is swallowed, never surfaces to
-    the client — a missing history entry is not a solve failure."""
+    solved-field performance is both logged to services/design_history.py
+    (the same training data services/surrogate.py's quick-estimate feature
+    reads from) and sent to the client as one extra {"stage": "performance",
+    ...} message after the final residual message — the only place this data
+    (e.g. solidTminC/solidTmaxC) reaches the live UI; before this it was
+    computed and then discarded. Best-effort: a failure here (e.g. the
+    solved field not being available for some reason) is logged, not raised
+    — a missing history entry or missing performance message is not a solve
+    failure, the solve itself already succeeded and was already reported."""
     last: dict | None = None
     async for msg in run_real_solve(case_dir, max_iterations, target):
         await ws.send_json(msg)
@@ -102,8 +109,9 @@ async def _run_real(ws: WebSocket, case_dir: Path, max_iterations: int, target: 
                 hot=case_config["hot"], cold=case_config["cold"], solid=case_config["solid"],
             )
             design_history.record(case_config["surface"], params, performance, origin="solve")
+            await ws.send_json({"stage": "performance", **performance})
         except Exception:
-            pass
+            logger.exception("failed to record/send solved performance after converged solve")
 
 
 @router.websocket("/solve")
@@ -140,7 +148,7 @@ def solved_field(req: SolvedFieldRequest, session: str | None = Query(None)) -> 
     state = job_state.get_session(session)
     case_dir = state.active_case_dir
     if case_dir is None or not openfoam_available():
-        raise HTTPException(status_code=409, detail="no solved case available — mesh and solve first")
+        raise HTTPException(status_code=409, detail="no solved case available – mesh and solve first")
 
     points_mm = np.array(req.positions, dtype=np.float64).reshape(-1, 3)
     points_m = points_mm / 1000.0

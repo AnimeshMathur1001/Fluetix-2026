@@ -109,19 +109,6 @@ export interface BusyState {
   detail: string;
 }
 
-export interface ValidationResult {
-  nuSim: number;
-  nuRef: number;
-  frSim: number;
-  frRef: number;
-}
-
-export interface BlockCheckResult {
-  cells: number;
-  deltaQ: number;
-  deltaP: number;
-}
-
 /** Real solved-field-derived performance, distinct from the analytical
  * epsilon-NTU model in lib/physics.ts — see backend/app/services/foam_metrics.py. */
 export interface SolvedPerformance {

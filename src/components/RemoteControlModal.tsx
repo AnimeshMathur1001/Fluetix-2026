@@ -108,7 +108,7 @@ export default function RemoteControlModal() {
 
             <p className="mb-3.5 text-med leading-relaxed text-dim">
               Scan the code for whichever network your phone shares with this computer (Wi-Fi, a
-              hotspot either device is hosting). No internet connection is needed — everything
+              hotspot either device is hosting). No internet connection is needed – everything
               stays on your local network.
             </p>
 
@@ -166,11 +166,11 @@ export default function RemoteControlModal() {
                 <div>
                   This computer can't reach that address itself, so a phone won't be able to
                   either. If a green "reachable" address is shown above, use that QR code
-                  instead — otherwise this usually means either the server isn't bound to the
+                  instead – otherwise this usually means either the server isn't bound to the
                   network (run it with <code>--host 0.0.0.0</code> or <code>python -m app.main</code>),
                   or it's running inside Docker Desktop, which on
                   Windows/Mac can't see this computer's real Wi-Fi/Ethernet address at all. Enter
-                  your computer's own IP address below instead — find it via{' '}
+                  your computer's own IP address below instead – find it via{' '}
                   <code>ipconfig</code> (Windows) or <code>ifconfig</code>/System Settings
                   (macOS/Linux).
                 </div>

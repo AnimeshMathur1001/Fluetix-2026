@@ -28,7 +28,7 @@ def put_case(case_id: str, req: CaseRequest) -> dict:
 def results(case_id: str) -> Performance:
     case = _CASES.get(case_id)
     if case is None:
-        raise HTTPException(status_code=404, detail=f"no case stored under id {case_id!r} — POST /cases/{case_id} first")
+        raise HTTPException(status_code=404, detail=f"no case stored under id {case_id!r} – POST /cases/{case_id} first")
 
     perf = compute_performance(
         cell=case.cell,

@@ -1,13 +1,15 @@
 import { motion } from 'framer-motion';
 import { useAppStore } from '../../store/useAppStore';
+import { toDisplayTemp, tempUnitLabel } from '../../lib/utils';
 
 export default function ProbeCard() {
   const probe = useAppStore((s) => s.probe);
+  const tempUnit = useAppStore((s) => s.tempUnit);
   if (!probe) return null;
 
   const rows: [string, string][] = [
     ['x y z', probe.x.toFixed(2) + '  ' + probe.y.toFixed(2) + '  ' + probe.z.toFixed(2) + ' mm'],
-    ['T', probe.T.toFixed(2) + ' °C'],
+    ['T', toDisplayTemp(probe.T, tempUnit).toFixed(2) + ' ' + tempUnitLabel(tempUnit)],
     ['p', probe.p.toFixed(1) + ' Pa'],
     ['|U|', probe.u.toFixed(3) + ' m/s'],
   ];

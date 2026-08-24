@@ -17,7 +17,7 @@
  * exactly what the preset/custom material specifies.
  */
 export const SOLID_PROPERTY_NOTE =
-  'Typical literature/datasheet trends for as-built AM alloys, not a certified per-batch spec — density is treated as constant with T (negligible effect on a steady-state solve).';
+  'Typical literature/datasheet trends for as-built AM alloys, not a certified per-batch spec – density is treated as constant with T (negligible effect on a steady-state solve).';
 
 interface SolidPoint {
   t: number;

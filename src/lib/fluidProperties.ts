@@ -86,9 +86,9 @@ const CORRELATIONS: Record<FluidCorrelationKey, Correlation> = {
 };
 
 export const CORRELATION_NOTE =
-  'Water/air/hydrogen/eg50/oil show an instant local estimate (Vogel/Sutherland/polynomial fits — ' +
+  'Water/air/hydrogen/eg50/oil show an instant local estimate (Vogel/Sutherland/polynomial fits – ' +
   'no property database runs client-side) that gets upgraded to a verified value a moment after the ' +
-  'server responds. Every other fluid in the search list — well over a hundred — is evaluated ' +
+  'server responds. Every other fluid in the search list – well over a hundred – is evaluated ' +
   'server-side only, genuinely as a function of both inlet temperature and outlet pressure.';
 
 export function isCorrelated(key: string): key is FluidCorrelationKey {

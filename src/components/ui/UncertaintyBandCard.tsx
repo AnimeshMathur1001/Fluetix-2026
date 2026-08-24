@@ -46,7 +46,7 @@ export default function UncertaintyBandCard() {
       {s.uncertainty.running ? (
         <div className="mb-2 space-y-1 text-xxs text-accent">
           <div>
-            {s.uncertainty.variants.length}/3 variants complete — currently {s.uncertainty.currentVariant}
+            {s.uncertainty.variants.length}/3 variants complete – currently {s.uncertainty.currentVariant}
           </div>
           <ActionButton className="mt-1 inline-flex" onClick={uncertainty.cancel}>
             Cancel

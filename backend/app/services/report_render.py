@@ -105,7 +105,7 @@ def render_contour(
     else:
         centres = read_cell_centres(case_dir, region, time)
         if len(centres) != len(values):
-            raise FieldUnavailable("cell-centre / field cell-count mismatch — mesh may have changed since the solve")
+            raise FieldUnavailable("cell-centre / field cell-count mismatch – mesh may have changed since the solve")
         from scipy.spatial import cKDTree
 
         tree = cKDTree(centres)

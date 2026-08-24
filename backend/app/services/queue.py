@@ -53,7 +53,7 @@ class JobQueue:
             await send({
                 "stage": "queued",
                 "percent": 0,
-                "detail": f"Waiting for a free slot on this server — {position - 1} job(s) ahead…",
+                "detail": f"Waiting for a free slot on this server – {position - 1} job(s) ahead…",
                 "jobStatus": "running",
                 "source": "openfoam",
             })

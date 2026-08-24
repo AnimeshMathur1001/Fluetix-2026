@@ -53,7 +53,7 @@ def latest_time_dir(case_dir: Path) -> str:
     predictable from maxIterations alone — it has to be discovered."""
     times = [p.name for p in case_dir.iterdir() if p.is_dir() and re.fullmatch(r"\d+(\.\d+)?", p.name) and p.name != "0"]
     if not times:
-        raise FieldUnavailable("no solved time directory found in this case — run a solve first")
+        raise FieldUnavailable("no solved time directory found in this case – run a solve first")
     return max(times, key=float)
 
 
@@ -63,7 +63,7 @@ def _parse_internal_field(text: str) -> np.ndarray:
         um = _UNIFORM_RE.search(text)
         if um:
             return np.array([float(um.group(1))], dtype=np.float64)
-        raise FieldUnavailable("could not parse internalField — unrecognised OpenFOAM field file format")
+        raise FieldUnavailable("could not parse internalField – unrecognised OpenFOAM field file format")
 
     kind, n = m.group(1), int(m.group(2))
     lines = text[m.end():].split("\n")
@@ -95,10 +95,10 @@ def read_cell_centres(case_dir: Path, region: RegionKey, time: str) -> np.ndarra
 
 def read_field(case_dir: Path, region: RegionKey, time: str, field: FieldName) -> np.ndarray:
     if region == "solid" and field not in _SOLID_FIELDS:
-        raise FieldUnavailable(f"{field} has no real solved data in the solid region — it has no momentum equation there")
+        raise FieldUnavailable(f"{field} has no real solved data in the solid region – it has no momentum equation there")
     path = case_dir / time / region / _FIELD_FILE[field]
     if not path.exists():
-        raise FieldUnavailable(f"{path} not found — was this region actually solved?")
+        raise FieldUnavailable(f"{path} not found – was this region actually solved?")
     values = _parse_internal_field(path.read_text())
     if field == "velocity":
         values = np.linalg.norm(values, axis=1)
@@ -117,7 +117,7 @@ def sample_field(case_dir: Path, region: RegionKey, field: FieldName, points_m: 
 
     centres = read_cell_centres(case_dir, region, time)
     if len(centres) != len(values):
-        raise FieldUnavailable("cell-centre / field cell-count mismatch — mesh may have changed since the solve")
+        raise FieldUnavailable("cell-centre / field cell-count mismatch – mesh may have changed since the solve")
 
     from scipy.spatial import cKDTree
 

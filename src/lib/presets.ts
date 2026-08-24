@@ -34,12 +34,12 @@ export const SURFACES: { key: SurfaceType; label: string; equation: string }[] =
 ];
 
 export const FACE_ROLES: { value: FaceRole; label: string }[] = [
-  { value: 'periodicA', label: 'Periodic — pair A' },
-  { value: 'periodicB', label: 'Periodic — pair B' },
-  { value: 'inletHot', label: 'Inlet — hot' },
-  { value: 'outletHot', label: 'Outlet — hot' },
-  { value: 'inletCold', label: 'Inlet — cold' },
-  { value: 'outletCold', label: 'Outlet — cold' },
+  { value: 'periodicA', label: 'Periodic – pair A' },
+  { value: 'periodicB', label: 'Periodic – pair B' },
+  { value: 'inletHot', label: 'Inlet – hot' },
+  { value: 'outletHot', label: 'Outlet – hot' },
+  { value: 'inletCold', label: 'Inlet – cold' },
+  { value: 'outletCold', label: 'Outlet – cold' },
   { value: 'wall', label: 'Wall' },
 ];
 

@@ -180,7 +180,7 @@ TEMPLATE = Template(r"""
     margin: 20mm 16mm 18mm 16mm;
     @bottom-center { content: "Page " counter(page) " of " counter(pages); font-size: 8pt; color: #888; }
     @bottom-left { content: "{{ req.caseName }}"; font-size: 8pt; color: #888; }
-    @bottom-right { content: "Fluetix — A. Mathur, A. K. Singh, A. Gupta"; font-size: 8pt; color: #888; }
+    @bottom-right { content: "Fluetix – A. Mathur, A. K. Singh, A. Gupta"; font-size: 8pt; color: #888; }
   }
   * { box-sizing: border-box; }
   body { font-family: "Liberation Serif", Georgia, serif; color: #1a1a1a; font-size: 10.5pt; line-height: 1.45; }
@@ -238,7 +238,7 @@ TEMPLATE = Template(r"""
     Hot: {{ req.hot.fluid }} @ {{ req.hot.Tin }} &deg;C &middot; Cold: {{ req.cold.fluid }} @ {{ req.cold.Tin }} &deg;C &middot;
     Solid: {{ req.solid.mat }}<br>
     {% if solved %}Includes real solved-field results (t={{ solved.time }}).
-    {% else %}Analytical (&epsilon;-NTU) model only — no completed solve on record for this case.{% endif %}<br>
+    {% else %}Analytical (&epsilon;-NTU) model only – no completed solve on record for this case.{% endif %}<br>
     Fluetix &middot; Author: Animesh Mathur &middot; Co-Authors: Arihant Kumar Singh, Aviral Gupta
   </div>
 
@@ -270,14 +270,14 @@ TEMPLATE = Template(r"""
         {% set worst = 'bad' if manufacturability|selectattr('severity','equalto','bad')|list|length > 0 else ('warn' if manufacturability|selectattr('severity','equalto','warn')|list|length > 0 else 'ok') %}
         <span class="flag-{{ worst }}">{{ {'ok': 'No issues', 'warn': 'Caution', 'bad': 'Issues found'}[worst] }}</span>
       </div>
-      <div class="sub">{{ manufacturability|length }} check(s) — see Section 5</div>
+      <div class="sub">{{ manufacturability|length }} check(s) – see Section 5</div>
     </div>
     {% endif %}
     {% if scale_up %}
     <div class="kpi">
       <div class="lbl">Full-scale Q</div>
       <div class="val">{{ "%.2f"|format(scale_up.Q / 1000) }} kW</div>
-      <div class="sub">{{ scale_up.parallel }}&times;{{ scale_up.series }} cells — see Section 6</div>
+      <div class="sub">{{ scale_up.parallel }}&times;{{ scale_up.series }} cells – see Section 6</div>
     </div>
     {% endif %}
   </div>
@@ -308,9 +308,9 @@ TEMPLATE = Template(r"""
 <h2>How to read this report</h2>
 <p>This report has two kinds of numbers, and telling them apart matters more than any single
 value in it. <b>Analytical</b> figures (Section 4) come from a closed-form &epsilon;-NTU heat-exchanger
-correlation — fast, always available, and a reasonable design-stage estimate, but a model, not a
+correlation – fast, always available, and a reasonable design-stage estimate, but a model, not a
 measurement. <b>Solved</b> figures (Sections 5&ndash;7, present only when a CFD run is on record) come
-from a real conjugate-heat-transfer CFD solve of this exact geometry — slower to
+from a real conjugate-heat-transfer CFD solve of this exact geometry – slower to
 obtain, but the closer of the two to what the physical part would actually do. When both are present
 in a report, treat the solved numbers as the more trustworthy one; a large gap between them is worth
 investigating (mesh too coarse, solve not fully converged, or an arrangement/flow assumption in the
@@ -320,10 +320,10 @@ analytical model that doesn't hold for this geometry), not something to average 
 the Mesh &amp; Solve step should agree); <b>effectiveness &epsilon;</b> is bounded 0&ndash;1 and is the fraction of
 the thermodynamically maximum possible heat transfer this exchanger actually achieves; <b>energy
 imbalance</b> compares heat lost by the hot side against heat gained by the cold side and should be
-small (a few percent) — a large imbalance in the solved section usually means the solve hasn't run
+small (a few percent) – a large imbalance in the solved section usually means the solve hasn't run
 enough iterations yet, not a modelling error (see the note under Section 7). Every other section-level
 caveat is disclosed in the small grey note under that section's own numbers, in the same spirit as
-this paragraph — this report does not round off or hide the difference between a real result and an
+this paragraph – this report does not round off or hide the difference between a real result and an
 estimate anywhere in it.</p>
 
 <div class="pagebreak"></div>
@@ -350,7 +350,7 @@ estimate anywhere in it.</p>
   {% endfor %}
 </table>
 <div class="note">Periodic faces (role periodicA/periodicB) are modelled as adiabatic walls, a disclosed
-approximation — not true cyclic boundary conditions.</div>
+approximation – not true cyclic boundary conditions.</div>
 
 <h3>Fluid &amp; solid properties</h3>
 <table>
@@ -373,15 +373,15 @@ approximation — not true cyclic boundary conditions.</div>
 {% if property_plots.hot or property_plots.cold %}
 <h3>Fluid properties vs. temperature</h3>
 <div class="note">Each curve is genuinely re-evaluated at that temperature and this stream's actual
-operating pressure against a physical-property database, not interpolated cosmetically — swept
+operating pressure against a physical-property database, not interpolated cosmetically – swept
 &plusmn;60&deg;C around the inlet temperature (dashed line) to show how much the property actually
 moves across the exchanger, not just its value at one point.</div>
-{% if property_plots.hot %}<img src="{{ property_plots.hot }}" style="width:100%;"><div class="note" style="text-align:center;margin-top:-4pt;">Hot stream — {{ req.hot.fluid }}</div>{% endif %}
-{% if property_plots.cold %}<img src="{{ property_plots.cold }}" style="width:100%;margin-top:6pt;"><div class="note" style="text-align:center;margin-top:-4pt;">Cold stream — {{ req.cold.fluid }}</div>{% endif %}
+{% if property_plots.hot %}<img src="{{ property_plots.hot }}" style="width:100%;"><div class="note" style="text-align:center;margin-top:-4pt;">Hot stream – {{ req.hot.fluid }}</div>{% endif %}
+{% if property_plots.cold %}<img src="{{ property_plots.cold }}" style="width:100%;margin-top:6pt;"><div class="note" style="text-align:center;margin-top:-4pt;">Cold stream – {{ req.cold.fluid }}</div>{% endif %}
 {% endif %}
 {% if property_plots.solid %}
 <h3>Solid conductivity &amp; specific heat vs. temperature</h3>
-<div class="note">Typical literature/datasheet trend for this alloy — not a certified per-batch spec, and
+<div class="note">Typical literature/datasheet trend for this alloy – not a certified per-batch spec, and
 density is intentionally not shown as temperature-dependent (see Section 1's disclosure and the
 Materials panel in the app).</div>
 <img src="{{ property_plots.solid }}" style="width:60%;display:block;margin:0 auto;">
@@ -414,7 +414,7 @@ CFD case geometry (grey = solid lattice, red = hot channel, blue = cold channel)
 <div class="pagebreak"></div>
 <h2>4. Analytical Performance (&epsilon;-NTU model)</h2>
 <div class="note">Closed-form correlation estimate, recomputed server-side from the geometry and fluid
-properties above — independent of whether a CFD solve has been run.
+properties above – independent of whether a CFD solve has been run.
 Laminar Nusselt correction applied: Nu = 4.36 x
 {{ nu_correction.A }} x Re^{{ nu_correction.b }}.
 Source: {{ nu_correction.sourceNote }}.</div>
@@ -458,7 +458,7 @@ Source: {{ nu_correction.sourceNote }}.</div>
 {% if manufacturability %}
 <div class="pagebreak"></div>
 <h2>5. Manufacturability</h2>
-<div class="note">Metal powder-bed (LPBF) printability checks against this exact generated geometry —
+<div class="note">Metal powder-bed (LPBF) printability checks against this exact generated geometry –
 wall thickness is a general design guideline (not a certified per-machine/material spec), escape-path
 detection is topological (from the boundary face roles above), and the overhang figure is computed
 directly from the generated triangle mesh, not estimated.</div>
@@ -478,7 +478,7 @@ directly from the generated triangle mesh, not estimated.</div>
 <div class="pagebreak"></div>
 <h2>6. Scale-Up &amp; Full-System Estimate</h2>
 <div class="note">Extrapolates the single simulated unit cell to a full core sized to the target
-dimensions and total flow rates below — recomputed server-side from these raw inputs (not trusted
+dimensions and total flow rates below – recomputed server-side from these raw inputs (not trusted
 verbatim from the client), the same integrity reasoning as the analytical model in Section 4.
 Entrance effects, manifold maldistribution and header pressure losses are excluded; &Delta;p scales
 with series count, UA with total cell count, and effectiveness is recomputed from total NTU, not
@@ -517,9 +517,9 @@ multiplied.</div>
 {% if residual_chart %}<img src="{{ residual_chart }}" style="width:100%;"><br>{% endif %}
 <table>
   <tr><th>Metric</th><th class="num">Value</th></tr>
-  <tr><td>Iterations run</td><td class="num">{{ req.iteration if req.iteration is not none else "—" }}</td></tr>
+  <tr><td>Iterations run</td><td class="num">{{ req.iteration if req.iteration is not none else "–" }}</td></tr>
   <tr><td>Converged (all residuals incl. solid)</td>
-      <td class="num">{% if req.converged %}<span class="flag-ok">yes</span>{% elif req.converged is sameas false %}<span class="flag-bad">no</span>{% else %}—{% endif %}</td></tr>
+      <td class="num">{% if req.converged %}<span class="flag-ok">yes</span>{% elif req.converged is sameas false %}<span class="flag-bad">no</span>{% else %}–{% endif %}</td></tr>
   <tr><td>Latest solved time</td><td class="num">{{ solved.time }}</td></tr>
 </table>
 
@@ -528,17 +528,17 @@ multiplied.</div>
 {% for c in solved.contours %}
 <div class="contour">
   <img src="{{ c.image }}">
-  <div class="cap">{{ c.region|capitalize }} — {{ c.field }} · range {{ "%.3g"|format(c.min) }} – {{ "%.3g"|format(c.max) }} {{ c.unit }} (t={{ c.time }})</div>
+  <div class="cap">{{ c.region|capitalize }} – {{ c.field }} · range {{ "%.3g"|format(c.min) }} – {{ "%.3g"|format(c.max) }} {{ c.unit }} (t={{ c.time }})</div>
 </div>
 {% endfor %}
 <div class="note">Sampled onto each region's real triangulated surface from its nearest solved cell
-centre — not interpolated. Solid region has no real solved U or p (no momentum equation there /
+centre – not interpolated. Solid region has no real solved U or p (no momentum equation there /
 inert placeholder field), so those combinations are omitted rather than shown as fabricated data.</div>
 
 <div class="pagebreak"></div>
 <h2>9. Solved-Field Performance (boundary-derived, real)</h2>
 <div class="note">Computed from the solver's own real boundary-patch values at the inlet/outlet faces of
-the latest solved time — a plain (not area-weighted) mean of each patch's actual face values, a
+the latest solved time – a plain (not area-weighted) mean of each patch's actual face values, a
 disclosed approximation.</div>
 <table>
   <tr><th>Metric</th><th class="num">Hot</th><th class="num">Cold</th></tr>
@@ -557,10 +557,10 @@ disclosed approximation.</div>
   <tr><td>Solid temperature range</td><td class="num">{{ "%.2f"|format(solved.performance.solidTminC) }} – {{ "%.2f"|format(solved.performance.solidTmaxC) }} &deg;C</td></tr>
 </table>
 <div class="note">A high energy imbalance or a narrow solid temperature range usually means the solve has
-not run enough iterations — the solid region's own energy equation settles far slower than the fluid
+not run enough iterations – the solid region's own energy equation settles far slower than the fluid
 side. Not evidence of a modelling error by itself.</div>
 
-<h3>Analytical vs. solved — side by side</h3>
+<h3>Analytical vs. solved – side by side</h3>
 <div class="note">Per this report's reading guide: a real gap here is worth investigating, not averaging
 away. Percentages below are (solved &minus; analytical) / analytical.</div>
 <table>
@@ -599,7 +599,7 @@ away. Percentages below are (solved &minus; analytical) / analytical.</div>
 {% else %}
 <div class="pagebreak"></div>
 <h2>7. CFD Solve &amp; Solved-Field Results</h2>
-<p class="section-missing">No completed solve is on record for this case — this report contains
+<p class="section-missing">No completed solve is on record for this case – this report contains
 the analytical estimate only. Run Mesh &amp; Solve, then regenerate this report, to include real
 solved-field contours and boundary-derived performance.</p>
 {% endif %}

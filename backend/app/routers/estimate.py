@@ -30,7 +30,7 @@ def estimate(req: EstimateRequest) -> EstimateResponse:
         have = len(design_history.for_surface(req.surface))
         raise HTTPException(
             status_code=409,
-            detail=f"not enough solved history for {req.surface} yet — have {have}, need {surrogate.MIN_RECORDS}",
+            detail=f"not enough solved history for {req.surface} yet – have {have}, need {surrogate.MIN_RECORDS}",
         )
     return EstimateResponse(**result)
 

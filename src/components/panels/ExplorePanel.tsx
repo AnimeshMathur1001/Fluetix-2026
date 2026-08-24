@@ -43,7 +43,7 @@ export default function ExplorePanel() {
       <div className="mb-3.5 text-xxs leading-relaxed text-mute3">
         Sweeps wall thickness and overall unit-cell scale, meshes and solves a handful of real candidates through the
         same pipeline as a normal solve, and reports which ones form a genuine Pareto front across effectiveness,
-        pressure drop and solid fraction. {surfaceHistory > 0 ? `Pre-screens against ${surfaceHistory} previously solved ${s.surface} case${surfaceHistory === 1 ? '' : 's'} to pick promising candidates before spending real solve time on them.` : 'Not enough solve history yet to pre-screen — candidates are sampled evenly across the ranges below.'}
+        pressure drop and solid fraction. {surfaceHistory > 0 ? `Pre-screens against ${surfaceHistory} previously solved ${s.surface} case${surfaceHistory === 1 ? '' : 's'} to pick promising candidates before spending real solve time on them.` : 'Not enough solve history yet to pre-screen – candidates are sampled evenly across the ranges below.'}
       </div>
 
       {!s.backend.available ? (
@@ -84,7 +84,7 @@ export default function ExplorePanel() {
       {s.explorer.running ? (
         <div className="mb-3 space-y-1 text-xxs text-accent">
           <div>
-            {s.explorer.poolSize > 0 ? `Screened ${s.explorer.poolSize} candidates (${s.explorer.screened ? 'surrogate-ranked' : 'evenly sampled'}) — ` : ''}
+            {s.explorer.poolSize > 0 ? `Screened ${s.explorer.poolSize} candidates (${s.explorer.screened ? 'surrogate-ranked' : 'evenly sampled'}) – ` : ''}
             {s.explorer.candidates.length}/{s.explorer.total} real solves complete
             {s.explorer.currentIndex != null ? `, running candidate ${s.explorer.currentIndex + 1}` : ''}
           </div>
@@ -124,7 +124,7 @@ export default function ExplorePanel() {
                     >
                       <td className="px-2 py-1">{c.thickness.toFixed(2)}</td>
                       <td className="px-2 py-1 text-right">{c.cellScale.toFixed(2)}</td>
-                      <td className="px-2 py-1 text-right">{c.solidFraction != null ? (c.solidFraction * 100).toFixed(1) + '%' : '—'}</td>
+                      <td className="px-2 py-1 text-right">{c.solidFraction != null ? (c.solidFraction * 100).toFixed(1) + '%' : '–'}</td>
                       <td className="px-2 py-1 text-right">{c.performance.effectiveness.toFixed(4)}</td>
                       <td className="px-2 py-1 text-right">{((c.performance.hot.pressureDrop + c.performance.cold.pressureDrop) / 2).toFixed(1)}</td>
                       <td className="px-2 py-1 text-center">{c.paretoFront ? '★' : ''}</td>

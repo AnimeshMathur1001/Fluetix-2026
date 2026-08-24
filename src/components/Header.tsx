@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { FolderOpen, Info, Save, Search, Smartphone } from 'lucide-react';
 import ActionButton from './ui/ActionButton';
+import SegmentedControl from './ui/SegmentedControl';
 import { useAppStore } from '../store/useAppStore';
 
 export default function Header() {
   const caseName = useAppStore((s) => s.caseName);
+  const tempUnit = useAppStore((s) => s.tempUnit);
   const backendAvailable = useAppStore((s) => s.backend.available);
   const queueStatus = useAppStore((s) => s.queueStatus);
   const remoteControlEnabled = useAppStore((s) => s.remoteControlEnabled);
@@ -64,7 +66,16 @@ export default function Header() {
       <div className="flex-1" />
 
       <div className="flex items-center gap-2.5">
-        <div className="flex items-center gap-1.5 text-tiny text-dim2" title={backendAvailable ? 'Live connection reachable' : 'No connection — running fully in-browser'}>
+        <SegmentedControl<'C' | 'K'>
+          className="w-[68px]"
+          value={tempUnit}
+          onChange={(v) => set({ tempUnit: v })}
+          options={[
+            { value: 'C', label: '°C' },
+            { value: 'K', label: 'K' },
+          ]}
+        />
+        <div className="flex items-center gap-1.5 text-tiny text-dim2" title={backendAvailable ? 'Live connection reachable' : 'No connection – running fully in-browser'}>
           <span
             className="h-1.5 w-1.5 rounded-full"
             style={{ background: !backendAvailable ? '#7d8792' : busy ? '#d9a03c' : '#5aa86a' }}
@@ -84,8 +95,8 @@ export default function Header() {
               ? 'Requires a live connection'
               : remoteControlEnabled
                 ? remotePhoneConnected
-                  ? 'Phone connected — click to view pairing / disable'
-                  : 'Waiting for phone — click to view pairing QR code'
+                  ? 'Phone connected – click to view pairing / disable'
+                  : 'Waiting for phone – click to view pairing QR code'
                 : 'Control this app from your phone over the local network'
           }
           onClick={() =>

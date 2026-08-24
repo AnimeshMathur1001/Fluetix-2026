@@ -6,7 +6,7 @@ import sys
 from fastapi import APIRouter, HTTPException, Query, WebSocket, WebSocketDisconnect
 from pydantic import ValidationError
 
-from ..schemas import BlockCheckResponse, MeshRequest, MeshResponse, WatertightRequest, WatertightResponse
+from ..schemas import MeshRequest, MeshResponse, WatertightRequest, WatertightResponse
 from ..services import job_state
 from ..services.foam import openfoam_available
 from ..services.foam_case import MeshPipelineError, generate_case, run_mesh_pipeline, run_mesh_pipeline_streamed
@@ -97,7 +97,7 @@ def mesh(req: MeshRequest, session: str | None = Query(None)) -> MeshResponse:
         return MeshResponse(**cached, source="openfoam")
 
     if not state.mesh_lock.acquire(blocking=False):
-        raise HTTPException(status_code=409, detail="A mesh generation is already running for this case — wait for it to finish.")
+        raise HTTPException(status_code=409, detail="A mesh generation is already running for this case – wait for it to finish.")
     try:
         if state.case_dir.exists():
             shutil.rmtree(state.case_dir)
@@ -126,7 +126,7 @@ def mesh(req: MeshRequest, session: str | None = Query(None)) -> MeshResponse:
             state.active_case_dir = None
             state.last_mesh_key = None
             print(exc, file=sys.stderr)
-            raise HTTPException(status_code=500, detail=f"{exc.step} failed — see server logs") from exc
+            raise HTTPException(status_code=500, detail=f"{exc.step} failed – see server logs") from exc
 
         state.active_case_dir = state.case_dir
         state.last_mesh_key = key
@@ -154,17 +154,17 @@ async def mesh_ws(ws: WebSocket) -> None:
     state = job_state.get_session(ws.query_params.get("session"))
 
     if not openfoam_available() or not _has_full_case_spec(req):
-        await ws.send_json({**_synthetic_mesh(req).model_dump(), "stage": "complete", "percent": 100, "detail": "estimated — solver unavailable or partial case spec", "jobStatus": "done"})
+        await ws.send_json({**_synthetic_mesh(req).model_dump(), "stage": "complete", "percent": 100, "detail": "estimated – solver unavailable or partial case spec", "jobStatus": "done"})
         return
 
     key = mesh_cache_key(req)
     cached = _cache_hit(state, key)
     if cached is not None:
-        await ws.send_json({**cached, "stage": "complete", "percent": 100, "detail": "unchanged parameters — reusing the existing mesh", "jobStatus": "done", "source": "openfoam"})
+        await ws.send_json({**cached, "stage": "complete", "percent": 100, "detail": "unchanged parameters – reusing the existing mesh", "jobStatus": "done", "source": "openfoam"})
         return
 
     if not state.mesh_lock.acquire(blocking=False):
-        await ws.send_json({"stage": "queued", "percent": 0, "detail": "A mesh generation is already running for this case — wait for it to finish, then try again.", "jobStatus": "failed", "source": "openfoam"})
+        await ws.send_json({"stage": "queued", "percent": 0, "detail": "A mesh generation is already running for this case – wait for it to finish, then try again.", "jobStatus": "failed", "source": "openfoam"})
         return
 
     try:
@@ -214,10 +214,9 @@ async def mesh_ws(ws: WebSocket) -> None:
     finally:
         state.mesh_lock.release()
 
-
-@router.post("/sweep", response_model=BlockCheckResponse)
-def sweep(req: MeshRequest) -> BlockCheckResponse:
-    """Periodicity / block-independence check — needs a real multi-cell solve
-    to be honest (see README), so this is a clearly-labelled placeholder."""
-    cells = round((req.bgCells**3) * (1.9**req.refine) * (req.nx * req.ny * req.nz) / 1000) * 27
-    return BlockCheckResponse(cells=cells, deltaQ=0.0, deltaP=0.0, source="synthetic")
+# A real periodicity / block-independence check (solve a 3x3x3 lattice block
+# and compare per-cell averages to a single unit cell) used to have a
+# POST /sweep stub here returning hardcoded cells/deltaQ=0/deltaP=0. That
+# number was never actually computed from anything, so it was removed rather
+# than kept as a placeholder result — building the real multi-region solve
+# this needs is future work, not something to fake a response for.

@@ -72,11 +72,11 @@ export default function QuickEstimateCard() {
             </span>
           </div>
           <div className={cn('mt-1.5 text-xxs', confidenceLabel(qe.result.confidence)[1])}>
-            {confidenceLabel(qe.result.confidence)[0]} — based on {qe.result.basedOn} of {qe.result.sampleSize} similar
+            {confidenceLabel(qe.result.confidence)[0]} – based on {qe.result.basedOn} of {qe.result.sampleSize} similar
             solved case{qe.result.sampleSize === 1 ? '' : 's'} on this surface type
           </div>
           <div className="mt-1 text-xxs leading-relaxed text-mute3">
-            Distance-weighted average of real prior solves, not a new simulation — run a full solve for a verified
+            Distance-weighted average of real prior solves, not a new simulation – run a full solve for a verified
             result.
           </div>
         </div>

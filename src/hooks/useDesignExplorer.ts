@@ -22,7 +22,7 @@ export function useDesignExplorer() {
   const start = useCallback((input: ExploreSweepInput) => {
     const s = useAppStore.getState();
     if (!s.backend.available) {
-      s.flash('The design explorer needs a live connection — not available as an in-browser stand-in');
+      s.flash('The design explorer needs a live connection – not available as an in-browser stand-in');
       return;
     }
     if (s.explorer.running) return;
@@ -72,19 +72,19 @@ export function useDesignExplorer() {
           },
         });
       } else if (msg.phase === 'failed') {
-        st.pushLog('design-explorer candidate failed — ' + msg.error, 'warn');
+        st.pushLog('design-explorer candidate failed – ' + msg.error, 'warn');
       } else if (msg.phase === 'complete') {
         st.set({
           explorer: { ...st.explorer, running: false, phase: 'complete', currentIndex: null, candidates: msg.candidates },
         });
-        st.flash('Design explorer complete — ' + msg.candidates.length + ' candidates solved');
+        st.flash('Design explorer complete – ' + msg.candidates.length + ' candidates solved');
       }
     };
 
     ws.onerror = () => {
       const st = useAppStore.getState();
       st.set({ explorer: { ...st.explorer, running: false, phase: 'failed', error: 'not connected' } });
-      st.pushLog('not connected — the design explorer needs a live connection', 'warn');
+      st.pushLog('not connected – the design explorer needs a live connection', 'warn');
     };
 
     ws.onclose = () => {

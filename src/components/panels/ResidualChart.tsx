@@ -76,7 +76,7 @@ export default function ResidualChart() {
       <div className="mt-1.5 flex flex-wrap gap-2.5">
         {SERIES.map((s) => {
           const arr = residuals[s.key];
-          const last = arr.length ? arr[arr.length - 1].toExponential(1) : '—';
+          const last = arr.length ? arr[arr.length - 1].toExponential(1) : '–';
           return (
             <span key={s.key} className="flex items-center gap-1 font-mono text-2xs text-dim2">
               <span className="inline-block h-[2px] w-[7px]" style={{ background: s.colour }} />

@@ -140,7 +140,7 @@ def build_lattice(
     """Marching-cubes surface extraction. Raises RuntimeError if scikit-image
     isn't installed — callers should catch this and fall back or 501."""
     if not HAVE_SKIMAGE:
-        raise RuntimeError("the server-side geometry engine isn't installed — see the server's own README")
+        raise RuntimeError("the server-side geometry engine isn't installed – see the server's own README")
 
     t0 = time.perf_counter()
     field, solid_fraction = build_scalar_field(surface, cell, thickness, grading, grad_axis, n, region, voxels_per_cell, open_faces)

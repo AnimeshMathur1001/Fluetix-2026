@@ -11,7 +11,7 @@ def lattice(req: LatticeRequest) -> GeometryResponse:
     if not HAVE_SKIMAGE:
         raise HTTPException(
             status_code=501,
-            detail="the server-side geometry engine isn't installed — see the server's own README",
+            detail="the server-side geometry engine isn't installed – see the server's own README",
         )
     result = build_lattice(
         surface=req.surface,

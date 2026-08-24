@@ -6,7 +6,7 @@
  * already behaves when no backend is configured at all.
  */
 import type { LatticeParams, LatticeMeshData } from './tpms';
-import type { Axis, FaceKey, FaceRole, FieldName, RegionKey, MeshStats, SolidMaterial, Stream, SurfaceType, WatertightReport, BlockCheckResult, FlowArrangement } from './types';
+import type { Axis, FaceKey, FaceRole, FieldName, RegionKey, MeshStats, SolidMaterial, Stream, SurfaceType, WatertightReport, FlowArrangement } from './types';
 import type { PhysicsInput, Performance } from './physics';
 import type { FluidState } from './fluidProperties';
 import { getSessionId } from './session';
@@ -146,10 +146,6 @@ export async function fetchMesh(body: MeshRequestBody): Promise<MeshStats & { so
   return req('/mesh', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }, 120000);
 }
 
-export async function fetchSweep(body: MeshRequestBody): Promise<BlockCheckResult & { source: 'openfoam' | 'synthetic' }> {
-  return req('/sweep', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }, 15000);
-}
-
 export async function fetchProperties(fluid: string, tempC: number, pressurePa = 101325): Promise<FluidState & { source: 'coolprop' | 'correlation' }> {
   const qs = new URLSearchParams({ fluid, T: String(tempC), P: String(pressurePa) });
   return req('/properties?' + qs.toString(), { method: 'GET' }, 4000);
@@ -218,6 +214,13 @@ export interface SolveMessage {
   jobStatus: 'running' | 'done' | 'failed';
   source: 'openfoam' | 'synthetic';
 }
+
+/** Sent once, after the final SolveMessage, only when the client's start
+ * message included the full case spec and the run converged for real — see
+ * backend/app/routers/solve.py's `_run_real`. Distinguished from SolveMessage
+ * (which has no `stage` key) the same way the queue's own `{"stage":
+ * "queued", ...}` announcement already is. */
+export type SolvePerformanceMessage = { stage: 'performance' } & import('./types').SolvedPerformance;
 
 /** Raw WebSocket to WS /solve — caller sends the start config as the first message. */
 export function openSolveSocket(): WebSocket {

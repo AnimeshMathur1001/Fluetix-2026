@@ -1,6 +1,7 @@
 """WS /mesh-independence — a genuine grid-convergence study, not a
-placeholder. Distinct from the periodicity/block-independence check
-POST /sweep still stands in for (see that endpoint's docstring): this reruns
+placeholder. Distinct from the periodicity/block-independence check, which
+used to have a POST /sweep stub here returning hardcoded numbers and has
+since been removed entirely rather than kept as a fake result. This reruns
 the *same* real mesh+solve pipeline that /mesh and WS /solve already use,
 once per requested background-mesh resolution (`bgCells`), and reports how a
 solved-field-derived metric (pressure drop, effectiveness) changes as the
@@ -154,7 +155,7 @@ async def mesh_independence(ws: WebSocket) -> None:
         state = job_state.get_session(ws.query_params.get("session"))
 
         if not state.mesh_lock.acquire(blocking=False):
-            await safe_send({"phase": "failed", "level": None, "error": "A mesh generation is already running for this case — wait for it to finish."})
+            await safe_send({"phase": "failed", "level": None, "error": "A mesh generation is already running for this case – wait for it to finish."})
             return
 
         async def run_level(index: int, bg_cells: int) -> dict | None:
@@ -184,7 +185,7 @@ async def mesh_independence(ws: WebSocket) -> None:
                     )
                     mesh_stats = run_mesh_pipeline(level_dir)
                 except MeshPipelineError as exc:
-                    await safe_send({"phase": "failed", "level": bg_cells, "error": f"{exc.step} failed — see server logs"})
+                    await safe_send({"phase": "failed", "level": bg_cells, "error": f"{exc.step} failed – see server logs"})
                     return None
 
                 await safe_send({"phase": "meshed", "level": bg_cells, **mesh_stats})

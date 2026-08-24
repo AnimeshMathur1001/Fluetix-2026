@@ -12,7 +12,7 @@ import { downloadText, toCSV } from '../../lib/exporters';
 import { fetchReportPdf } from '../../lib/api';
 import { geometryCache } from '../../lib/geometryCache';
 import { checkEscapeHoles, checkOverhang, checkWallThickness, computeOverhang } from '../../lib/manufacturability';
-import { cn, formatNumber } from '../../lib/utils';
+import { cn, formatNumber, toDisplayTemp, tempUnitLabel } from '../../lib/utils';
 import type { ClipAxis, FieldName, RegionKey } from '../../lib/types';
 
 export default function ResultsPanel() {
@@ -36,10 +36,10 @@ export default function ResultsPanel() {
     s.converged === true
       ? 'Converged in ' + s.iteration + ' iterations · ' + effectiveTurbulence
       : s.converged === false
-        ? 'Run did not converge — values below are not trustworthy'
+        ? 'Run did not converge – values below are not trustworthy'
         : s.solving
-          ? 'Solving — iteration ' + s.iteration
-          : 'No solve on record — values are from the correlation preview';
+          ? 'Solving – iteration ' + s.iteration
+          : 'No solve on record – values are from the correlation preview';
 
   const headerColour =
     s.converged === true
@@ -59,7 +59,7 @@ export default function ResultsPanel() {
 
       {s.backendPerformance && s.backendPerformance.imbalance > 5 && (
         <div className="mb-3 rounded border border-warn/40 bg-warn/10 px-3 py-2 text-smx text-warn">
-          CFD energy imbalance {s.backendPerformance.imbalance.toFixed(1)} % — the solid region has
+          CFD energy imbalance {s.backendPerformance.imbalance.toFixed(1)} % – the solid region has
           not fully converged. Run more iterations before treating these results as final.
         </div>
       )}
@@ -74,7 +74,7 @@ export default function ResultsPanel() {
         <div className="mb-4 text-xxs leading-relaxed text-mute3">
           {backendDelta !== null
             ? 'Verified: analytical Q agrees within ' + backendDelta.toFixed(3) + '% between the local and server-side calculation.'
-            : 'Connected — verifying…'}
+            : 'Connected – verifying…'}
         </div>
       ) : null}
 
@@ -84,7 +84,7 @@ export default function ResultsPanel() {
         value={s.contourSource}
         onChange={(v) => {
           if (v === 'solved' && !(s.solvedFieldReady && s.meshed)) {
-            s.flash('No completed solve on record — run "Run solve" on the Mesh & Solve step first');
+            s.flash('No completed solve on record – run "Run solve" on the Mesh & Solve step first');
             return;
           }
           const needsTemperature = v === 'solved' && s.viewRegion === 'solid' && s.viewField !== 'temperature';
@@ -99,9 +99,20 @@ export default function ResultsPanel() {
         {s.contourSource === 'solved'
           ? 'Real solver output, sampled onto this surface from the nearest solved cell.'
           : s.solvedFieldReady && s.meshed
-            ? 'Closed-form estimate from the ε-NTU model — a completed solve is available, switch above to view it.'
-            : 'Closed-form estimate from the ε-NTU model — not read from a solve. Run a solve on the Mesh & Solve step to view real field data here.'}
+            ? 'Closed-form estimate from the ε-NTU model – a completed solve is available, switch above to view it.'
+            : 'Closed-form estimate from the ε-NTU model – not read from a solve. Run a solve on the Mesh & Solve step to view real field data here.'}
       </div>
+
+      <MetricRow
+        label="Solid temperature minimum (CFD)"
+        value={s.backendSolvedPerformance ? toDisplayTemp(s.backendSolvedPerformance.solidTminC, s.tempUnit).toFixed(2) : '--'}
+        unit={tempUnitLabel(s.tempUnit)}
+      />
+      <MetricRow
+        label="Solid temperature maximum (CFD)"
+        value={s.backendSolvedPerformance ? toDisplayTemp(s.backendSolvedPerformance.solidTmaxC, s.tempUnit).toFixed(2) : '--'}
+        unit={tempUnitLabel(s.tempUnit)}
+      />
 
       {/* Solid has no real solved U (never written) and its solved p is an inert
           uniform placeholder (see backend/README.md) — only T is real there.
@@ -177,20 +188,26 @@ export default function ResultsPanel() {
         </div>
       ) : null}
 
-      <SectionTitle className="mt-4">Performance — per unit cell</SectionTitle>
+      <SectionTitle className="mt-4">Performance – per unit cell</SectionTitle>
       <MetricRow divider large label="Δp hot" value={formatNumber(perf.hot.pressureDrop, 1)} unit="Pa" valueClassName="text-hot" />
       <MetricRow divider large label="Δp cold" value={formatNumber(perf.cold.pressureDrop, 1)} unit="Pa" valueClassName="text-cold" />
       <MetricRow divider large label="Heat duty Q" value={formatNumber(perf.Q, 2)} unit="W" valueClassName="text-ink" />
       <MetricRow divider large label="Overall U" value={formatNumber(perf.U, 0)} unit="W/m²K" valueClassName="text-ink" />
       <MetricRow divider large label="UA" value={formatNumber(perf.UA, 4)} unit="W/K" />
-      <MetricRow divider large label="NTU" value={formatNumber(perf.NTU, 4)} unit="—" />
+      <MetricRow divider large label="NTU" value={formatNumber(perf.NTU, 4)} unit="–" />
       <MetricRow divider large label="Effectiveness ε" value={(perf.effectiveness * 100).toFixed(2)} unit="%" valueClassName="text-accent" />
       <MetricRow divider large label="h hot / cold" value={perf.hot.h.toFixed(0) + ' / ' + perf.cold.h.toFixed(0)} unit="W/m²K" />
       <MetricRow label="Nu (hot)" value={perf.hot.nusselt.toFixed(2)} />
       <MetricRow label="f (hot)" value={perf.hot.friction.toFixed(5)} />
       <MetricRow label="Nu (cold)" value={perf.cold.nusselt.toFixed(2)} />
       <MetricRow label="f (cold)" value={perf.cold.friction.toFixed(5)} />
-      <MetricRow divider large label="T out hot / cold" value={perf.ThOut.toFixed(2) + ' / ' + perf.TcOut.toFixed(2)} unit="°C" />
+      <MetricRow
+        divider
+        large
+        label="T out hot / cold"
+        value={toDisplayTemp(perf.ThOut, s.tempUnit).toFixed(2) + ' / ' + toDisplayTemp(perf.TcOut, s.tempUnit).toFixed(2)}
+        unit={tempUnitLabel(s.tempUnit)}
+      />
 
       <div
         className={cn(
@@ -215,13 +232,13 @@ export default function ResultsPanel() {
       <SectionTitle className="mt-4">Mesh independence</SectionTitle>
       {s.meshIndependence.results.length > 0 ? (
         <div className="rounded-md border border-line2 bg-card p-2.5 text-xxs leading-relaxed text-mute3">
-          {s.meshIndependence.results.length} resolution(s) run — see the full table on the Mesh
+          {s.meshIndependence.results.length} resolution(s) run – see the full table on the Mesh
           &amp; Solve step, or in the PDF report below.
         </div>
       ) : (
         <div className="rounded-md border border-line2 bg-card p-2.5 text-xxs leading-relaxed text-mute3">
           Not run yet. Reruns the full real meshing-and-solving pipeline at several resolutions
-          — run it from the Mesh &amp; Solve step.
+          – run it from the Mesh &amp; Solve step.
         </div>
       )}
 
@@ -283,7 +300,7 @@ export default function ResultsPanel() {
               URL.revokeObjectURL(url);
               s.flash('PDF report generated');
             } catch (err) {
-              s.flash('PDF report failed — ' + (err instanceof Error ? err.message : 'not connected'));
+              s.flash('PDF report failed – ' + (err instanceof Error ? err.message : 'not connected'));
             } finally {
               s.set({ reportGenerating: false });
             }
@@ -293,8 +310,8 @@ export default function ResultsPanel() {
         </ActionButton>
       </div>
       <div className="mt-2 text-xxs leading-relaxed text-mute3">
-        The PDF is generated server-side from real geometry, mesh stats, and — if a solve has
-        completed — genuine solved-field contours and boundary-derived performance. Can take up to
+        The PDF is generated server-side from real geometry, mesh stats, and – if a solve has
+        completed – genuine solved-field contours and boundary-derived performance. Can take up to
         a minute or two. JSON/CSV above stay instant, in-browser exports of the analytical model only.
       </div>
     </div>

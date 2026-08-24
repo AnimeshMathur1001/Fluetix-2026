@@ -156,12 +156,12 @@ export default function MeshSolvePanel() {
 
       <SectionTitle className="mt-4">Flow regime</SectionTitle>
       <MetricRow
-        label="Re — hot"
+        label="Re – hot"
         value={perf.hot.reynolds.toFixed(0)}
         valueClassName={perf.hot.reynolds < 2300 ? 'text-ok' : 'text-warn'}
       />
       <MetricRow
-        label="Re — cold"
+        label="Re – cold"
         value={perf.cold.reynolds.toFixed(0)}
         valueClassName={perf.cold.reynolds < 2300 ? 'text-ok' : 'text-warn'}
       />
@@ -172,8 +172,8 @@ export default function MeshSolvePanel() {
       />
       <div className="my-2 text-xxs leading-relaxed text-accent">
         {perf.laminar
-          ? 'Both streams below Re 2300 — laminar recommended. Selected: ' + effectiveTurbulence + '.'
-          : 'At least one stream transitional/turbulent — k-ω SST recommended. Selected: ' +
+          ? 'Both streams below Re 2300 – laminar recommended. Selected: ' + effectiveTurbulence + '.'
+          : 'At least one stream transitional/turbulent – k-ω SST recommended. Selected: ' +
             effectiveTurbulence +
             '.'}
       </div>
@@ -181,7 +181,7 @@ export default function MeshSolvePanel() {
         value={s.turbulence}
         onChange={(v) => s.set({ turbulence: v as TurbulenceModel, converged: null })}
         options={[
-          { value: 'auto', label: 'Auto (recommend from Re) — ' + effectiveTurbulence },
+          { value: 'auto', label: 'Auto (recommend from Re) – ' + effectiveTurbulence },
           { value: 'laminar', label: 'Laminar' },
           { value: 'kOmegaSST', label: 'k-ω SST' },
           { value: 'kEpsilon', label: 'k-ε realizable' },
@@ -230,7 +230,7 @@ export default function MeshSolvePanel() {
         <div className="mb-2 text-xxs leading-relaxed text-mute3">
           Reruns the full real meshing-and-solving pipeline at each
           background-cell resolution below and reports how
-          far Δp and effectiveness move between them — the standard check
+          far Δp and effectiveness move between them – the standard check
           that a result isn't an artifact of mesh coarseness. Distinct from
           the periodicity check below (still synthetic); this one is genuine
           end-to-end, so each resolution is a real multi-minute solve.
@@ -263,7 +263,7 @@ export default function MeshSolvePanel() {
         {s.meshIndependence.running ? (
           <div className="mb-2 space-y-1 text-xxs">
             <div className="text-muted">
-              {s.meshIndependence.levels.filter((lv) => lv.phase === 'done').length}/{s.meshIndependence.levelTotal} resolutions complete — running concurrently
+              {s.meshIndependence.levels.filter((lv) => lv.phase === 'done').length}/{s.meshIndependence.levelTotal} resolutions complete – running concurrently
             </div>
             {s.meshIndependence.levels.map((lv) => (
               <div key={lv.level} className="flex items-center justify-between text-accent">
@@ -356,8 +356,8 @@ export default function MeshSolvePanel() {
                     }>
                       {r.gci!.gciFineGridPct.toFixed(2)} %
                       {r.gci!.converged
-                        ? ' — mesh independent'
-                        : ' — refine further'}
+                        ? ' – mesh independent'
+                        : ' – refine further'}
                     </span>
                     <span>Refinement ratios</span>
                     <span className="text-ink">
@@ -399,7 +399,7 @@ export default function MeshSolvePanel() {
             <div className="text-xxs text-mute3">Checking server load…</div>
           )
         ) : (
-          <div className="text-xxs text-mute3">Not connected — meshing and solving run as an in-browser estimate only.</div>
+          <div className="text-xxs text-mute3">Not connected – meshing and solving run as an in-browser estimate only.</div>
         )}
 
         <div className="mb-2 mt-3 text-base2 font-semibold">Job status</div>

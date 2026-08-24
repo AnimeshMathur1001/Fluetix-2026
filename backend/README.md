@@ -55,10 +55,9 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000   # for active developm
 | `GET /properties` | **Real equation of state** via CoolProp's `PropsSI` when `pip install CoolProp` is present (water/air/hydrogen); otherwise the same hand-fit correlations as `lib/fluidProperties.ts`. Response always says which (`source: "coolprop" | "correlation"`). |
 | `POST /cases/{id}` + `GET /results/{id}` | **Real math, analytical model** — exact port of `lib/physics.ts`'s ε-NTU calculation. Not a solved field; `source: "analytical"` says so. |
 | `POST /mesh` | **Real** when OpenFOAM is available and the request carries a full case spec (surface, cell geometry, tagged faces, hot/cold/solid materials — see `MeshRequest` in `schemas.py`): generates the case via `services/foam_case.py`, runs `blockMesh` → `snappyHexMesh` → `checkMesh` → `splitMeshRegions`, and returns real cell counts + mesh-quality metrics parsed from `checkMesh`'s own output. `source: "openfoam"`. Falls back to the synthetic cell-count estimate (`source: "synthetic"`) if OpenFOAM is unavailable or the request omits the case spec. |
-| `POST /sweep` | **Synthetic placeholder** — the periodicity/block-independence check described in the README would need a real multi-cell solve to be honest; not implemented yet. `source: "synthetic"`. |
 | `WS /solve` | **Real** once `POST /mesh` has generated a case (see `services/job_state.py` for the one-case-at-a-time handoff between the two routers): launches `chtMultiRegionSimpleFoam` as a subprocess and streams real per-iteration residuals parsed from its stdout, `source: "openfoam"`. Falls back to the synthetic exponential-decay stand-in (`source: "synthetic"`) if no case has been meshed yet or OpenFOAM is unavailable — same fallback behaviour the front end already had. |
 | `POST /solve/field` | **Real** once a solve has completed: reads OpenFOAM's actual solved T/U/p output (`services/foam_field.py`) and nearest-cell-centre-samples it onto the caller's own surface points. `source: "openfoam"`. Only T is real for the solid region (no momentum equation there, and its `p` field never leaves its uniform initial value — checked empirically). 409/422 (never a synthetic body) if nothing's solved yet or the region/field combination has no real data; the front end falls back to the analytical contour model in `lib/contours.ts` on either. |
-| `WS /mesh-independence` | **Real** — reruns the full mesh+solve pipeline once per requested background-cell resolution and reports how pressure drop/effectiveness move between them (real grid-convergence study, distinct from the still-synthetic `/sweep`). |
+| `WS /mesh-independence` | **Real** — reruns the full mesh+solve pipeline once per requested background-cell resolution and reports how pressure drop/effectiveness move between them (a real grid-convergence study). |
 | `WS /uncertainty` | **Real** — reruns the full mesh+solve pipeline at nominal wall thickness and at thickness ± a manufacturing tolerance, reporting a genuine performance band instead of one deterministic number. |
 | `WS /design-explorer` | **Real** — sweeps wall thickness and unit-cell scale, screens a candidate pool with `services/surrogate.py` (when enough history exists) or samples evenly otherwise, then actually meshes and solves the selected candidates and reports which are on a real Pareto front. |
 | `POST /estimate` | **Real, but not a simulation** — instant performance estimate as a distance-weighted nearest-neighbour regression over every real case this server has solved (`services/design_history.py` + `services/surrogate.py`). 409 with an honest "not enough history yet" until at least 3 real solves exist for that surface type. |
@@ -101,7 +100,7 @@ Done — `src/lib/api.ts` is the client, `src/hooks/useBackendHealth.ts` pings
 5 integration points falls back to its original in-browser stand-in when the
 backend is unreachable:
 
-1. `src/hooks/useTasks.ts` → `runFill` calls `POST /validate`, `runMesh` calls `POST /mesh`, `runBlockCheck` calls `POST /sweep`
+1. `src/hooks/useTasks.ts` → `runFill` calls `POST /validate`, `runMesh` calls `POST /mesh` (a reference-case validation tab and a periodicity/block-independence check used to live here too, calling nothing real and showing fabricated numbers — removed entirely rather than kept as placeholders)
 2. `src/hooks/useSolver.ts` → real `WebSocket /solve` when the backend's up, the original `setInterval` decay otherwise
 3. `src/hooks/useBackendResultsSync.ts` (mounted once in `App.tsx`, not inside `usePhysics.ts` — that hook is called from ~8 components, so a side effect there fired duplicated) → `POST /cases/:id` then `GET /results/:id`, written to `store.backendPerformance` and shown as a cross-check in `ResultsPanel.tsx`
 4. `src/store/useAppStore.ts`'s `setStreamTemperature`/`applyFluidPreset` → debounced `GET /properties`, upgrading the instant correlation estimate to a real CoolProp value once it resolves
@@ -119,7 +118,7 @@ app/
 ├── schemas.py                  pydantic mirrors of src/lib/types.ts
 ├── routers/
 │   ├── geometry.py             POST /geometry/lattice
-│   ├── mesh.py                  POST /mesh, /validate, /sweep, WS /mesh
+│   ├── mesh.py                  POST /mesh, /validate, WS /mesh
 │   ├── mesh_independence.py     WS /mesh-independence — real grid-convergence study
 │   ├── uncertainty.py           WS /uncertainty — manufacturing-tolerance performance band
 │   ├── explorer.py              WS /design-explorer — surrogate-screened Pareto sweep

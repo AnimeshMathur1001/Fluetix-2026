@@ -100,7 +100,7 @@ export function useLatticeGeometry(): LatticeGeometry {
           // silently swap away from a combo that DOES have real data just
           // because a sibling request (e.g. a stale in-flight one for a
           // region/field the user already navigated away from) failed.
-          useAppStore.getState().flash('Solved field unavailable for this region/field — check the server log');
+          useAppStore.getState().flash('Solved field unavailable for this region/field – check the server log');
           useAppStore.getState().set({ fetchingSolvedField: false });
         });
       return () => {

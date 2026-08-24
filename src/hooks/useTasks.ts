@@ -3,7 +3,7 @@ import { useAppStore, type AppState } from '../store/useAppStore';
 import { adaptiveVoxelsPerCell, estimateTriangles, VOXELS_FULL, VOXELS_PREVIEW, type LatticeParams } from '../lib/tpms';
 import { clamp, formatInt } from '../lib/utils';
 import { geometryCache } from '../lib/geometryCache';
-import { fetchSweep, fetchWatertight, openMeshSocket, type MeshProgressMessage } from '../lib/api';
+import { fetchWatertight, openMeshSocket, type MeshProgressMessage } from '../lib/api';
 
 /** Drives the progress overlay for a staged back-end job. Deliberately has NO
  *  unmount cleanup: `useTasks()` is called fresh in every panel that needs it
@@ -81,16 +81,16 @@ export function useTasks() {
           try {
             const report = await fetchWatertight(geometryCache.positions, geometryCache.indices);
             s.set({ filled: true, watertight: report });
-            s.flash(report.ok ? 'Wall region is watertight (verified) — meshing unlocked' : 'Validation failed — open edges or non-manifold geometry found');
+            s.flash(report.ok ? 'Wall region is watertight (verified) – meshing unlocked' : 'Validation failed – open edges or non-manifold geometry found');
             return;
           } catch {
-            s.pushLog('not connected — falling back to local check', 'warn');
+            s.pushLog('not connected – falling back to local check', 'warn');
           }
         }
         const ok = s.stats.triangles > 0;
         const volume = s.stats.solidFraction * s.cellX * s.cellY * s.cellZ * s.nx * s.ny * s.nz;
         s.set({ filled: true, watertight: { ok, openEdges: 0, nonManifold: 0, shells: 1, volume } });
-        s.flash(ok ? 'Wall region is watertight — meshing unlocked' : 'Validation failed');
+        s.flash(ok ? 'Wall region is watertight – meshing unlocked' : 'Validation failed');
       },
     );
   }, [run]);
@@ -100,7 +100,7 @@ export function useTasks() {
   const runMeshLocal = useCallback(
     (s: AppState) => {
       run(
-        'Meshing three regions (local estimate — not connected)',
+        'Meshing three regions (local estimate – not connected)',
         1600,
         [
           'estimating background ' + s.bgCells + '³ cell count',
@@ -121,7 +121,7 @@ export function useTasks() {
               nonOrthogonality: Number((41 + Math.random() * 22 - s.refine * 2).toFixed(1)),
             },
           });
-          s.flash('Mesh generated — ' + cells.toLocaleString('en-GB') + 'k cells (local estimate)');
+          s.flash('Mesh generated – ' + cells.toLocaleString('en-GB') + 'k cells (local estimate)');
         },
       );
     },
@@ -155,8 +155,8 @@ export function useTasks() {
 
         if (msg.jobStatus === 'failed') {
           st.set({ busy: null });
-          st.pushLog('mesh pipeline failed at ' + msg.stage + ' — ' + msg.detail, 'error');
-          st.flash('Meshing failed — see log for details');
+          st.pushLog('mesh pipeline failed at ' + msg.stage + ' – ' + msg.detail, 'error');
+          st.flash('Meshing failed – see log for details');
           return;
         }
 
@@ -167,7 +167,7 @@ export function useTasks() {
             meshed: true,
             mesh: { cells, hot, cold, solid, skewness, aspectRatio, nonOrthogonality },
           });
-          st.flash('Mesh generated — ' + cells.toLocaleString('en-GB') + ' cells (' + (msg.source === 'openfoam' ? 'verified' : 'estimated') + ')');
+          st.flash('Mesh generated – ' + cells.toLocaleString('en-GB') + ' cells (' + (msg.source === 'openfoam' ? 'verified' : 'estimated') + ')');
           return;
         }
 
@@ -175,7 +175,7 @@ export function useTasks() {
       };
 
       ws.onerror = () => {
-        useAppStore.getState().pushLog('not connected — falling back to local estimate', 'warn');
+        useAppStore.getState().pushLog('not connected – falling back to local estimate', 'warn');
         runMeshLocal(useAppStore.getState());
       };
     },
@@ -191,74 +191,6 @@ export function useTasks() {
     if (s.backend.available) runMeshRemote(s);
     else runMeshLocal(s);
   }, [runMeshRemote, runMeshLocal]);
-
-  const runValidation = useCallback(() => {
-    const s = useAppStore.getState();
-    run(
-      'Reference case — straight rectangular duct',
-      2400,
-      [
-        'meshing 40×40×400 reference duct',
-        'running reference solve',
-        'extract Nu, fRe from field data',
-        'compare to Shah & London correlation',
-      ],
-      () => {
-        const nuRef = 3.61;
-        const frRef = 57;
-        s.set({
-          validation: {
-            nuRef,
-            frRef,
-            nuSim: nuRef * (1 + (Math.random() * 0.05 - 0.012)),
-            frSim: frRef * (1 + (Math.random() * 0.05 - 0.015)),
-          },
-        });
-        s.flash('Reference case within 5% of correlation');
-      },
-    );
-  }, [run]);
-
-  const runBlockCheck = useCallback(() => {
-    const s = useAppStore.getState();
-    run(
-      'Periodicity check — 3×3×3 block',
-      5200,
-      [
-        'generating 3×3×3 lattice block',
-        'meshing (27× cells)',
-        s.backend.available ? 'requesting periodicity sweep' : 'solve — this is the expensive path',
-        'compare per-cell averages to 1×1×1',
-      ],
-      async () => {
-        if (s.backend.available) {
-          try {
-            const { source: _source, ...blockCheck } = await fetchSweep({
-              bgCells: s.bgCells,
-              refine: s.refine,
-              layers: s.layers,
-              nx: s.nx,
-              ny: s.ny,
-              nz: s.nz,
-            });
-            s.set({ blockCheck });
-            s.flash('Block check complete (' + (_source === 'openfoam' ? 'verified' : 'estimated') + ')');
-            return;
-          } catch {
-            s.pushLog('not connected — falling back to local estimate', 'warn');
-          }
-        }
-        s.set({
-          blockCheck: {
-            cells: Math.round((s.mesh ? s.mesh.cells : 900) * 27),
-            deltaQ: 1.8 + Math.random() * 1.6,
-            deltaP: 2.4 + Math.random() * 1.8,
-          },
-        });
-        s.flash('Block check complete');
-      },
-    );
-  }, [run]);
 
   const importPart = useCallback(
     (file: File) => {
@@ -295,7 +227,7 @@ export function useTasks() {
     const ms = clamp(estTri / 3500, 300, 3000);
     s.set({ generating: true });
     run(
-      'Generating lattice geometry — ' + formatInt(estTri) + ' tri est.',
+      'Generating lattice geometry – ' + formatInt(estTri) + ' tri est.',
       ms,
       [
         'sampling implicit field @ ' + voxels + '³ voxels/cell',
@@ -312,8 +244,8 @@ export function useTasks() {
   const cancelGenerate = useCallback(() => {
     cancelProgress();
     useAppStore.getState().set({ generating: false });
-    useAppStore.getState().flash('Generation cancelled — previous geometry kept');
+    useAppStore.getState().flash('Generation cancelled – previous geometry kept');
   }, [cancelProgress]);
 
-  return { runFill, runMesh, runValidation, runBlockCheck, importPart, runGenerate, cancelGenerate };
+  return { runFill, runMesh, importPart, runGenerate, cancelGenerate };
 }

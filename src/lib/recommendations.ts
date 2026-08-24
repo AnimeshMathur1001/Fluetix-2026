@@ -61,8 +61,8 @@ export function meshRecommendations(args: {
     recommended: String(recommendedBgCells),
     reason:
       cellsAcrossWall < MIN_CELLS_ACROSS_WALL
-        ? `Only ~${cellsAcrossWall.toFixed(1)} background cells span the wall thickness at this resolution — the solid region ends up with almost no internal structure, so its own energy-equation residual can sit flat for a long stretch even after the fluid has genuinely converged (the solver now detects and works around this, but a properly resolved wall settles cleaner and faster). ${recommendedBgCells}³ gets you to ~${MIN_CELLS_ACROSS_WALL}.`
-        : `~${cellsAcrossWall.toFixed(1)} background cells already span the wall thickness — enough internal resolution that the solid region behaves like a real 3D field, not a coarse 1-2 cell approximation.`,
+        ? `Only ~${cellsAcrossWall.toFixed(1)} background cells span the wall thickness at this resolution – the solid region ends up with almost no internal structure, so its own energy-equation residual can sit flat for a long stretch even after the fluid has genuinely converged (the solver now detects and works around this, but a properly resolved wall settles cleaner and faster). ${recommendedBgCells}³ gets you to ~${MIN_CELLS_ACROSS_WALL}.`
+        : `~${cellsAcrossWall.toFixed(1)} background cells already span the wall thickness – enough internal resolution that the solid region behaves like a real 3D field, not a coarse 1-2 cell approximation.`,
     status: args.bgCells >= recommendedBgCells ? 'ok' : 'suggest',
     apply: () => args.applyBgCells(recommendedBgCells),
   });
@@ -74,7 +74,7 @@ export function meshRecommendations(args: {
     recommended: '2',
     reason:
       args.refine < 1
-        ? 'Level 0 leaves the fluid-solid interface unrefined — a jagged coupled boundary shows up as noisier, slower-settling residuals. Level 1-2 resolves it cleanly without a large cell-count cost.'
+        ? 'Level 0 leaves the fluid-solid interface unrefined – a jagged coupled boundary shows up as noisier, slower-settling residuals. Level 1-2 resolves it cleanly without a large cell-count cost.'
         : 'The coupled interface has enough refinement to resolve a clean boundary, which keeps the coupled residuals from picking up mesh-driven noise.',
     status: args.refine >= 1 ? 'ok' : 'suggest',
     apply: () => args.applyRefine(2),
@@ -117,7 +117,7 @@ export function meshRecommendations(args: {
       args.residualTarget === '1e-4'
         ? '1e-4 can call it converged before the solid wall has genuinely settled. 1e-5 is tight enough to trust without chasing solver noise the way 1e-6 sometimes does.'
         : args.residualTarget === '1e-6'
-          ? "Tighter than necessary — 1e-6 rarely changes the result but can cost hundreds of extra iterations. Not wrong, just slower than it needs to be for most cases."
+          ? "Tighter than necessary – 1e-6 rarely changes the result but can cost hundreds of extra iterations. Not wrong, just slower than it needs to be for most cases."
           : '1e-5 is tight enough to trust the result without chasing solver noise the way a tighter target sometimes does.',
     status: args.residualTarget === '1e-4' ? 'suggest' : 'ok',
     apply: () => args.applyResidualTarget('1e-5'),
@@ -146,7 +146,7 @@ export function flowRecommendation(args: {
       label,
       current: args.mdot.toFixed(4) + ' kg/s',
       recommended: args.mdot.toFixed(4) + ' kg/s',
-      reason: `Re ≈ ${args.reynolds.toFixed(0)} — comfortably above the near-stagnant range, so this stream drives real heat transfer into the coupled wall each iteration.`,
+      reason: `Re ≈ ${args.reynolds.toFixed(0)} – comfortably above the near-stagnant range, so this stream drives real heat transfer into the coupled wall each iteration.`,
       status: 'ok',
     };
   }
@@ -156,7 +156,7 @@ export function flowRecommendation(args: {
     label,
     current: args.mdot.toFixed(4) + ' kg/s',
     recommended: recommendedMdot.toFixed(4) + ' kg/s',
-    reason: `Re ≈ ${args.reynolds.toFixed(0)} is very weak flow — little convective heat transfer means the coupled wall barely moves each iteration, which is the same "looks stalled" pattern a badly-resolved wall shows. Re ≈ ${TARGET_RE_WHEN_LOW} keeps the coupling strong enough to settle promptly.`,
+    reason: `Re ≈ ${args.reynolds.toFixed(0)} is very weak flow – little convective heat transfer means the coupled wall barely moves each iteration, which is the same "looks stalled" pattern a badly-resolved wall shows. Re ≈ ${TARGET_RE_WHEN_LOW} keeps the coupling strong enough to settle promptly.`,
     status: 'suggest',
     apply: () => args.applyMdot(recommendedMdot),
   };
@@ -166,5 +166,5 @@ export function flowRecommendation(args: {
  * long-looking solve on a low-conductivity wall isn't mistaken for a hang. */
 export function solidConductivityNote(k: number, thicknessMm: number): string | null {
   if (k >= 20 || thicknessMm > 1.5) return null;
-  return `This wall's conductivity (k = ${k} W/m·K) combined with its thin lattice wall means the solid region's own residual can sit flat for a while after the fluid side converges — expected for this material/thickness combination, not a stall. The solver detects this automatically and keeps going until the field genuinely settles.`;
+  return `This wall's conductivity (k = ${k} W/m·K) combined with its thin lattice wall means the solid region's own residual can sit flat for a while after the fluid side converges – expected for this material/thickness combination, not a stall. The solver detects this automatically and keeps going until the field genuinely settles.`;
 }

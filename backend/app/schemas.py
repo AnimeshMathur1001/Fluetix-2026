@@ -122,13 +122,6 @@ class MeshResponse(BaseModel):
     source: Literal["openfoam", "synthetic"]
 
 
-class BlockCheckResponse(BaseModel):
-    cells: int
-    deltaQ: float
-    deltaP: float
-    source: Literal["openfoam", "synthetic"]
-
-
 class SolvedFieldRequest(BaseModel):
     positions: list[float]  # flattened (x,y,z) triples, millimetres — the frontend's own rendered surface
     region: RegionKey

@@ -4,10 +4,9 @@ import MetricRow from '../ui/MetricRow';
 import SectionTitle from '../ui/SectionTitle';
 import { useAppStore } from '../../store/useAppStore';
 import { usePhysics } from '../../hooks/usePhysics';
-import { useTasks } from '../../hooks/useTasks';
 import { buildReport } from '../../lib/report';
 import { downloadText } from '../../lib/exporters';
-import { formatInt } from '../../lib/utils';
+import { formatInt, toDisplayTemp, tempUnitLabel } from '../../lib/utils';
 import type { CoreTarget } from '../../lib/types';
 
 const CORE_FIELDS: { label: string; key: keyof CoreTarget; unit: string; step: number }[] = [
@@ -21,11 +20,10 @@ const CORE_FIELDS: { label: string; key: keyof CoreTarget; unit: string; step: n
 export default function ScaleUpPanel() {
   const s = useAppStore();
   const { performance: perf, scaleUp: sc, effectiveTurbulence } = usePhysics();
-  const { runValidation, runBlockCheck } = useTasks();
 
   return (
     <div className="px-4 pb-7 pt-4">
-      <div className="mb-4 text-[14px] font-semibold">Scale-up &amp; validation</div>
+      <div className="mb-4 text-[14px] font-semibold">Scale-up</div>
 
       <SectionTitle>Target core</SectionTitle>
       {CORE_FIELDS.map((f) => (
@@ -56,9 +54,15 @@ export default function ScaleUpPanel() {
       <MetricRow divider large label="Heat duty Q" value={(sc.Q / 1000).toFixed(2)} unit="kW" valueClassName="text-ink" />
       <MetricRow divider large label="Overall U" value={sc.U.toFixed(0)} unit="W/m²K" valueClassName="text-ink" />
       <MetricRow divider large label="UA" value={sc.UA.toFixed(1)} unit="W/K" />
-      <MetricRow divider large label="NTU" value={sc.NTU.toFixed(3)} unit="—" />
+      <MetricRow divider large label="NTU" value={sc.NTU.toFixed(3)} unit="–" />
       <MetricRow divider large label="Effectiveness ε" value={(sc.effectiveness * 100).toFixed(2)} unit="%" valueClassName="text-accent" />
-      <MetricRow divider large label="T out hot / cold" value={sc.ThOut.toFixed(1) + ' / ' + sc.TcOut.toFixed(1)} unit="°C" />
+      <MetricRow
+        divider
+        large
+        label="T out hot / cold"
+        value={toDisplayTemp(sc.ThOut, s.tempUnit).toFixed(1) + ' / ' + toDisplayTemp(sc.TcOut, s.tempUnit).toFixed(1)}
+        unit={tempUnitLabel(s.tempUnit)}
+      />
       <MetricRow divider large label="Pumping power" value={sc.pumpingPower.toFixed(1)} unit="W" />
       <MetricRow divider large label="Power density" value={sc.powerDensity.toFixed(2)} unit="kW/L" />
 
@@ -69,67 +73,13 @@ export default function ScaleUpPanel() {
         recomputed from total NTU, not multiplied.
       </div>
 
+      {/* A real reference-case validation (mesh a straight duct, solve it, compare
+          Nu/f·Re to Shah & London) and a real periodicity/block-independence check
+          (solve a 3×3×3 block, compare per-cell averages to 1×1×1) both used to live
+          here, but neither ever ran real physics — they showed Math.random()-jittered
+          or hardcoded-zero numbers as if they were measured results. Removed rather
+          than fixed in place: building the real versions is future work, not a patch. */}
       <div className="border-t border-line pt-4">
-        <SectionTitle>Validation</SectionTitle>
-        <ActionButton size="block" className="mb-2.5" onClick={runValidation}>
-          Run reference case — straight duct
-        </ActionButton>
-        {s.validation ? (
-          <>
-            <MetricRow label="Nu — simulated" value={s.validation.nuSim.toFixed(3)} />
-            <MetricRow label="Nu — correlation" value={s.validation.nuRef.toFixed(3)} />
-            <MetricRow
-              label="Nu error"
-              value={
-                (s.validation.nuSim > s.validation.nuRef ? '+' : '') +
-                (((s.validation.nuSim - s.validation.nuRef) / s.validation.nuRef) * 100).toFixed(2) +
-                ' %'
-              }
-              valueClassName={
-                Math.abs((s.validation.nuSim - s.validation.nuRef) / s.validation.nuRef) < 0.05
-                  ? 'text-ok'
-                  : 'text-bad'
-              }
-            />
-            <MetricRow
-              label="f·Re error"
-              value={
-                (s.validation.frSim > s.validation.frRef ? '+' : '') +
-                (((s.validation.frSim - s.validation.frRef) / s.validation.frRef) * 100).toFixed(2) +
-                ' %'
-              }
-              valueClassName={
-                Math.abs((s.validation.frSim - s.validation.frRef) / s.validation.frRef) < 0.05
-                  ? 'text-ok'
-                  : 'text-bad'
-              }
-            />
-          </>
-        ) : (
-          <MetricRow label="Status" value="not run" valueClassName="text-mute2" />
-        )}
-
-        <ActionButton size="block" className="mb-2.5 mt-3" onClick={runBlockCheck}>
-          Periodicity check — 3×3×3 block
-        </ActionButton>
-        {s.blockCheck ? (
-          <>
-            <MetricRow label="Block cells" value={formatInt(s.blockCheck.cells) + ' k'} />
-            <MetricRow
-              label="Δ Q per cell"
-              value={s.blockCheck.deltaQ.toFixed(2) + ' %'}
-              valueClassName={s.blockCheck.deltaQ < 5 ? 'text-ok' : 'text-warn'}
-            />
-            <MetricRow
-              label="Δ Δp per cell"
-              value={s.blockCheck.deltaP.toFixed(2) + ' %'}
-              valueClassName={s.blockCheck.deltaP < 5 ? 'text-ok' : 'text-warn'}
-            />
-          </>
-        ) : (
-          <MetricRow label="Status" value="not run" valueClassName="text-mute2" />
-        )}
-
         <ActionButton
           variant="outline"
           size="block"

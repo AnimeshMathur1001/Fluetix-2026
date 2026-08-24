@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { openSolveSocket, type SolveMessage } from '../lib/api';
+import { openSolveSocket, type SolveMessage, type SolvePerformanceMessage } from '../lib/api';
 
 // hSolid decays slower than the fluid-side residuals to mirror real CFD
 // behaviour: a thin, highly-conductive solid wall has a low Biot number and
@@ -98,12 +98,21 @@ export function useSolver() {
       };
 
       ws.onmessage = (ev) => {
-        const raw = JSON.parse(ev.data) as SolveMessage | QueuedMessage;
+        const raw = JSON.parse(ev.data) as SolveMessage | QueuedMessage | SolvePerformanceMessage;
         const st = useAppStore.getState();
 
         if ('stage' in raw && raw.stage === 'queued') {
           st.set({ jobStatus: 'queued' });
           st.pushLog(raw.detail, 'info');
+          return;
+        }
+
+        if ('stage' in raw && raw.stage === 'performance') {
+          // Real solved-field performance (e.g. solid temperature range),
+          // sent once after the final residual message of a converged real
+          // solve — see backend/app/routers/solve.py's `_run_real`.
+          const { stage: _stage, ...performance } = raw;
+          st.set({ backendSolvedPerformance: performance });
           return;
         }
 
@@ -127,12 +136,12 @@ export function useSolver() {
           solvedFieldReady: msg.jobStatus === 'done' && msg.source === 'openfoam' ? true : st.solvedFieldReady,
         });
         if (msg.jobStatus === 'done' || msg.jobStatus === 'failed') {
-          st.pushLog(msg.jobStatus === 'done' ? 'solve complete' : 'solve stopped — iteration limit or divergence', msg.jobStatus === 'done' ? 'ok' : 'warn');
+          st.pushLog(msg.jobStatus === 'done' ? 'solve complete' : 'solve stopped – iteration limit or divergence', msg.jobStatus === 'done' ? 'ok' : 'warn');
         }
       };
 
       ws.onerror = () => {
-        useAppStore.getState().pushLog('not connected — falling back to local solver stand-in', 'warn');
+        useAppStore.getState().pushLog('not connected – falling back to local solver stand-in', 'warn');
         runLocal(target);
       };
 
@@ -160,6 +169,7 @@ export function useSolver() {
       probe: null,
       jobStatus: s.backend.available ? 'running' : 'local',
       solvedFieldReady: false, // invalidate until this run actually completes
+      backendSolvedPerformance: null, // invalidate the previous run's solid T min/max etc.
     });
 
     if (s.backend.available) runRemote(target, s.maxIterations);

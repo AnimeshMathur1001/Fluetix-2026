@@ -57,9 +57,10 @@ export default function AboutDialog() {
               ))}
             </div>
             <div className="mt-3.5 border-t border-line2 pt-3 text-tiny text-mute2">
-              Out of scope this build: .sldprt export, GPU solve, transient, two-phase, FEA. The
-              periodicity/block-independence check on the Scale-up step is still an estimate, not a
-              real cyclic-boundary solve. Fluid properties fall back to engineering correlations when
+              Out of scope this build: .sldprt export, GPU solve, transient, two-phase, FEA, a
+              periodicity/block-independence check, and reference-case validation against a
+              correlation – none of these run a real solve yet, so they're left out entirely rather
+              than shown as an estimate. Fluid properties fall back to engineering correlations when
               the connected property database isn't reachable.
             </div>
             <div className="mt-3.5 border-t border-line2 pt-3 text-tiny text-mute2">

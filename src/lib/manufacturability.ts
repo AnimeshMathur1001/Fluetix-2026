@@ -30,7 +30,7 @@ export function checkWallThickness(thicknessMm: number): ManufacturabilityCheck 
   const severity: CheckSeverity = thicknessMm < MIN_WALL_MM ? 'bad' : thicknessMm < RECOMMENDED_WALL_MM ? 'warn' : 'ok';
   const detail =
     severity === 'bad'
-      ? `Below the ${MIN_WALL_MM} mm general LPBF minimum — likely won't fuse cleanly on most machines/materials.`
+      ? `Below the ${MIN_WALL_MM} mm general LPBF minimum – likely won't fuse cleanly on most machines/materials.`
       : severity === 'warn'
         ? `Printable on many LPBF systems, but below the ${RECOMMENDED_WALL_MM} mm mark generally recommended for a reliable structural wall.`
         : `At or above the ${RECOMMENDED_WALL_MM} mm mark generally recommended for a reliable structural wall.`;
@@ -50,7 +50,7 @@ export function checkEscapeHoles(faces: Record<FaceKey, FaceRole>): Manufacturab
     const severity: CheckSeverity = openFaces === 0 ? 'bad' : 'ok';
     const detail =
       openFaces === 0
-        ? `No face is tagged inlet/outlet — the ${region} channel has no path to the exterior, so unfused powder can't drain out after printing.`
+        ? `No face is tagged inlet/outlet – the ${region} channel has no path to the exterior, so unfused powder can't drain out after printing.`
         : `${openFaces} open face(s) give unfused powder a path out of the ${region} channel during and after the build.`;
     return {
       label: region === 'hot' ? 'Hot channel escape path' : 'Cold channel escape path',
@@ -133,10 +133,10 @@ export function checkOverhang(result: OverhangResult): ManufacturabilityCheck {
   const severity: CheckSeverity = pct > 15 ? 'bad' : pct > 5 ? 'warn' : 'ok';
   const detail =
     severity === 'ok'
-      ? 'The continuous TPMS curvature is doing its job — very little surface needs support.'
+      ? 'The continuous TPMS curvature is doing its job – very little surface needs support.'
       : severity === 'warn'
-        ? 'A modest fraction of the surface exceeds the self-supporting angle — likely fine, worth a visual check near thin/graded regions.'
-        : 'A significant fraction of the surface exceeds the self-supporting angle — expect support structures or local print defects without design changes (e.g. reduced grading, reoriented build axis).';
+        ? 'A modest fraction of the surface exceeds the self-supporting angle – likely fine, worth a visual check near thin/graded regions.'
+        : 'A significant fraction of the surface exceeds the self-supporting angle – expect support structures or local print defects without design changes (e.g. reduced grading, reoriented build axis).';
   return {
     label: 'Self-supporting surface',
     severity,

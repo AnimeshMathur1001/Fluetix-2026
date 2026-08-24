@@ -16,7 +16,9 @@ export function useUncertaintyBand() {
   const start = useCallback((toleranceMm: number) => {
     const s = useAppStore.getState();
     if (!s.backend.available) {
-      s.flash('Tolerance sensitivity needs a live connection — not available as an in-browser stand-in');
+      const error = 'Tolerance sensitivity needs a live connection to the backend and a working OpenFOAM install (see backend/README.md) – not available as an in-browser stand-in';
+      s.set({ uncertainty: { ...s.uncertainty, running: false, phase: 'failed', error } });
+      s.flash(error);
       return;
     }
     if (s.uncertainty.running) return;
@@ -61,7 +63,7 @@ export function useUncertaintyBand() {
         });
       } else if (msg.phase === 'failed') {
         st.set({ uncertainty: { ...st.uncertainty, running: false, phase: 'failed', error: msg.error } });
-        st.flash('Tolerance sensitivity failed' + (msg.variant ? ' at ' + msg.variant : '') + ' — ' + msg.error);
+        st.flash('Tolerance sensitivity failed' + (msg.variant ? ' at ' + msg.variant : '') + ' – ' + msg.error);
         ws.close();
       } else if (msg.phase === 'complete') {
         st.set({
@@ -74,7 +76,7 @@ export function useUncertaintyBand() {
     ws.onerror = () => {
       const st = useAppStore.getState();
       st.set({ uncertainty: { ...st.uncertainty, running: false, phase: 'failed', error: 'not connected' } });
-      st.pushLog('not connected — tolerance sensitivity needs a live connection', 'warn');
+      st.pushLog('not connected – tolerance sensitivity needs a live connection', 'warn');
     };
 
     ws.onclose = () => {

@@ -530,6 +530,42 @@ runTimeModifiable true;
     )
 
 
+def request_final_write(case_dir: Path, max_iterations: int) -> None:
+    """Tells an already-running solver to write its current fields and stop,
+    instead of being killed mid-iteration with whatever it last happened to
+    have on disk (which, given writeInterval's coarse cadence, is often
+    nothing but the initial `0/` state). Relies on `runTimeModifiable true`
+    (set above): OpenFOAM re-reads system/controlDict once per timestep, so
+    setting stopAt to writeNow here makes the running subprocess perform one
+    more write at its current time and exit on its own — see
+    services/foam_solve.py's run_real_solve, which calls this the moment it
+    detects convergence from the solver's stdout, then simply waits for the
+    process to exit rather than terminating it. Same file/fields as
+    set_max_iterations otherwise, so a solver that doesn't notice in time
+    still runs to the original endTime unaffected."""
+    _write(
+        case_dir / "system" / "controlDict",
+        "dictionary",
+        "controlDict",
+        f"""application     chtMultiRegionSimpleFoam;
+startFrom       startTime;
+startTime       0;
+stopAt          writeNow;
+endTime         {max_iterations};
+deltaT          1;
+writeControl    timeStep;
+writeInterval   {max(1, max_iterations // 10)};
+purgeWrite      2;
+writeFormat     ascii;
+writePrecision  6;
+writeCompression off;
+timeFormat      general;
+timePrecision   6;
+runTimeModifiable true;
+""",
+    )
+
+
 def run(cmd: list[str], case_dir: Path, **kwargs) -> subprocess.CompletedProcess:
     return subprocess.run(cmd + ["-case", str(case_dir)], capture_output=True, text=True, **kwargs)
 
@@ -628,7 +664,7 @@ async def run_mesh_pipeline_streamed(case_dir: Path) -> AsyncIterator[dict]:
             yield {
                 "stage": stage_id,
                 "percent": percent_done,
-                "detail": f"{label} failed — see server logs",
+                "detail": f"{label} failed – see server logs",
                 "jobStatus": "failed",
                 "source": "openfoam",
             }

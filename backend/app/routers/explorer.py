@@ -174,7 +174,7 @@ async def design_explorer(ws: WebSocket) -> None:
 
         state = job_state.get_session(ws.query_params.get("session"))
         if not state.mesh_lock.acquire(blocking=False):
-            await ws.send_json({"phase": "failed", "index": None, "error": "A mesh generation is already running for this case — wait for it to finish."})
+            await ws.send_json({"phase": "failed", "index": None, "error": "A mesh generation is already running for this case – wait for it to finish."})
             return
 
         completed: list[dict] = []
@@ -205,7 +205,7 @@ async def design_explorer(ws: WebSocket) -> None:
                         )
                         mesh_stats = run_mesh_pipeline(cand_dir)
                     except MeshPipelineError as exc:
-                        await ws.send_json({"phase": "failed", "index": index, "error": f"{exc.step} failed — see server logs"})
+                        await ws.send_json({"phase": "failed", "index": index, "error": f"{exc.step} failed – see server logs"})
                         continue
 
                     await ws.send_json({"phase": "candidate_meshed", "index": index, **mesh_stats})
