@@ -254,21 +254,16 @@ export default function ResultsPanel() {
             value={exergy.Ns.toFixed(5)}
             unit="—"
           />
-          <div className="mt-2 flex items-center gap-2
-                          text-smx">
+          <div className="mt-2 flex items-center gap-2 text-smx">
             <span className="text-dim">Reference T₀</span>
-            <input
-              type="number"
-              className="w-16 rounded bg-surface2 px-2 py-0.5
-                         text-smx text-base1 border border-border
-                         focus:outline-none focus:border-accent"
+            <NumericInput
+              align="right"
+              className="w-16"
               value={s.deadStateT}
               min={-50}
               max={50}
               step={1}
-              onChange={(e) =>
-                s.setDeadStateT(Number(e.target.value))
-              }
+              onChange={(v) => s.setDeadStateT(v)}
             />
             <span className="text-dim">°C</span>
           </div>
