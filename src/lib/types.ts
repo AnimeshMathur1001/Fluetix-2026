@@ -268,3 +268,14 @@ export interface NuCorrectionParams {
   sourceNote: string;
 }
 
+export interface ExergyResult {
+  T0_c: number;
+  sGenHot: number;
+  sGenCold: number;
+  sGen: number;
+  exergyDestroyed: number;
+  exergySupplied: number;
+  etaII: number;
+  Ns: number;
+}
+

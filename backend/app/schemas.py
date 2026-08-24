@@ -250,6 +250,10 @@ class ReportRequest(BaseModel):
     # Residual history from the last solve (frontend's own s.residuals),
     # rendered into a chart in the report if present.
     residuals: dict[str, list[float]] | None = None
+    # The case's actual convergence target (frontend's own s.residualTarget),
+    # drawn as the residual chart's dashed line — without this the report
+    # can't tell 1e-4 from 1e-6 and would otherwise have to guess.
+    residualTarget: float | None = None
     iteration: int | None = None
     converged: bool | None = None
 

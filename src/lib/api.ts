@@ -293,6 +293,7 @@ export interface ReportRequestBody {
   flow: FlowArrangement;
   mesh?: MeshStats | null;
   residuals?: Record<string, number[]> | null;
+  residualTarget?: number | null;
   iteration?: number | null;
   converged?: boolean | null;
   meshIndependence?: import('./types').MeshIndependenceLevel[] | null;

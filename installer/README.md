@@ -12,14 +12,18 @@ commands — the installer downloads everything it needs itself.
 2. Copies the app (pre-built front end + backend source) to `Program Files\Fluetix`.
 3. Runs [scripts/install-prereqs.ps1](scripts/install-prereqs.ps1), which:
    - Installs Python 3.10+ via `winget` if not already present.
+   - Installs the Microsoft Edge WebView2 Runtime via `winget` if not already present (required
+     for the native app window below to open at all).
    - Installs the GTK3 runtime via `winget` if not already present (needed by WeasyPrint for
      PDF report generation).
    - Creates a private virtual environment inside the install folder and installs every backend
      Python package into it — nothing touches the system/global Python.
 4. Adds Start Menu and (optional) Desktop shortcuts that run
-   [scripts/launch.bat](scripts/launch.bat) — this starts the backend (which also serves the
-   built front end, see `backend/app/main.py`'s static-file mount) and opens it in the default
-   browser at `http://127.0.0.1:8000/`.
+   [scripts/launch.ps1](scripts/launch.ps1) — this starts the backend (which also serves the
+   built front end, see `backend/app/main.py`'s static-file mount) and opens a native app window
+   pointed at it (`backend/app/webview_window.py`, via the WebView2 runtime above), not a system
+   browser tab. `scripts/launch.bat` / `stop.bat` are kept as manual fallbacks for the same
+   `.ps1` scripts but aren't what the installed shortcuts actually invoke.
 5. Registers a normal Windows uninstaller (Add/Remove Programs) that stops any running Fluetix
    process, removes the app and its private virtual environment, and removes the shortcuts.
    Python and the GTK3 runtime are left in place, since other software may depend on them too.
@@ -54,7 +58,7 @@ installer/
 ├── ABOUT.txt                 Credits/notices page shown before the license page
 ├── scripts/
 │   ├── install-prereqs.ps1   Run once after install: Python/GTK3 via winget, venv, pip install
-│   ├── launch.ps1 / .bat     Start Menu / Desktop shortcut target — starts the app, opens browser
+│   ├── launch.ps1 / .bat     Start Menu / Desktop shortcut target — starts the app, opens its native window
 │   ├── stop.ps1 / .bat       Stops the background server started by launch.ps1
 │   └── uninstall-cleanup.ps1 Run by the uninstaller before files are removed
 └── output/                   Compiled Fluetix-2026-Setup.exe lands here (gitignored)

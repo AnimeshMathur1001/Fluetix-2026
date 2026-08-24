@@ -2,8 +2,9 @@
 question mesh_independence.py answers. Reruns the same real blockMesh ->
 snappyHexMesh -> splitMeshRegions -> chtMultiRegionSimpleFoam pipeline three
 times at one background-mesh resolution: the case's nominal wall thickness,
-and thickness minus/plus a real LPBF dimensional tolerance (the same
-guideline src/lib/manufacturability.ts already discloses to the user). The
+and thickness minus/plus a user-supplied LPBF dimensional tolerance (a
+separate input from the wall-thickness/overhang guidelines
+src/lib/manufacturability.ts discloses). The
 result is a genuine performance band — "effectiveness lands somewhere in
 this real range once the as-printed wall is off by a plausible amount" —
 not a single deterministic number pretending the print comes out exact.

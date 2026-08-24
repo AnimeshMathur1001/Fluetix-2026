@@ -195,3 +195,54 @@ def compute_scale_up(perf: dict, core: dict, cell: tuple[float, float, float], t
         "pumpingPower": (pressure_drop_hot * core["mdotHot"]) / hot["rho"],
         "powerDensity": q / 1000 / (core_volume * 1000) if core_volume > 0 else 0.0,
     }
+
+
+def compute_exergy(
+    perf: dict,
+    hot: dict,
+    cold: dict,
+    T0_c: float = 25.0,
+) -> dict:
+    """Second-law performance metrics for a heat exchanger.
+
+    T0_c: ambient reference temperature in degrees C.
+    Pressure-exergy terms are neglected (negligible at
+    the pressure drops typical of TPMS exchangers).
+    """
+    T0 = T0_c + 273.15
+    Thi = hot["Tin"]      + 273.15
+    Tho = perf["ThOut"]   + 273.15
+    Tci = cold["Tin"]     + 273.15
+    Tco = perf["TcOut"]   + 273.15
+
+    s_gen_hot  = hot["mdot"]  * hot["cp"]  * math.log(Tho / Thi)
+    s_gen_cold = cold["mdot"] * cold["cp"] * math.log(Tco / Tci)
+    s_gen = s_gen_hot + s_gen_cold
+
+    if abs(Thi - Tho) < 1e-6:
+        T_lm = Thi
+    else:
+        T_lm = (Thi - Tho) / math.log(Thi / Tho)
+
+    ex_supplied = perf["Q"] * (1.0 - T0 / T_lm) if T_lm > T0 else 0.0
+    ex_destroyed = T0 * s_gen
+
+    if ex_supplied > 1e-9:
+        eta_II = max(0.0, min(1.0, 1.0 - ex_destroyed / ex_supplied))
+    else:
+        eta_II = 0.0
+
+    min_stream = hot if perf["cHot"] <= perf["cCold"] else cold
+    Ns = (s_gen / (min_stream["mdot"] * min_stream["cp"])
+          if min_stream["mdot"] > 0 else 0.0)
+
+    return {
+        "T0_c":            T0_c,
+        "sGenHot":         s_gen_hot,
+        "sGenCold":        s_gen_cold,
+        "sGen":            s_gen,
+        "exergyDestroyed": ex_destroyed,
+        "exergySupplied":  ex_supplied,
+        "etaII":           eta_II,
+        "Ns":              Ns,
+    }

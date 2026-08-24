@@ -65,10 +65,12 @@ export default function ExplorePanel() {
         <NumericInput align="right" className="min-w-0 flex-1" step={0.05} min={0.3} value={scaleMax} onChange={setScaleMax} />
         <span className="w-6 text-xxs text-mute3">×</span>
       </div>
-      <div className="mb-3 flex items-center gap-2">
-        <span className="w-24 flex-none text-smx text-dim">Real solves</span>
-        <NumericInput align="right" className="min-w-0 flex-1" step={1} min={2} max={10} value={sampleCount} onChange={(v) => setSampleCount(Math.min(10, Math.max(2, Math.round(v))))} />
-        <span className="text-xxs text-mute3">candidates (each a full mesh + solve)</span>
+      <div className="mb-3">
+        <div className="flex items-center gap-2">
+          <span className="w-24 flex-none text-smx text-dim">Real solves</span>
+          <NumericInput align="right" className="min-w-0 flex-1" step={1} min={2} max={10} value={sampleCount} onChange={(v) => setSampleCount(Math.min(10, Math.max(2, Math.round(v))))} />
+        </div>
+        <div className="mt-1 text-xxs text-mute3">candidates (each a full mesh + solve)</div>
       </div>
 
       <ActionButton

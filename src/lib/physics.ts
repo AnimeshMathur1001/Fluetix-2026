@@ -270,3 +270,54 @@ export function computeScaleUp(
     reynoldsHot: hot.reynolds,
   };
 }
+
+export interface ExergyResult {
+  T0_c: number;
+  sGenHot: number;
+  sGenCold: number;
+  sGen: number;
+  exergyDestroyed: number;
+  exergySupplied: number;
+  etaII: number;
+  Ns: number;
+}
+
+export function computeExergy(
+  perf: Performance,
+  hot: Stream,
+  cold: Stream,
+  T0_c = 25,
+): ExergyResult {
+  const T0  = T0_c + 273.15;
+  const Thi = hot.Tin      + 273.15;
+  const Tho = perf.ThOut   + 273.15;
+  const Tci = cold.Tin     + 273.15;
+  const Tco = perf.TcOut   + 273.15;
+
+  const sGenHot  = hot.mdot  * hot.cp  * Math.log(Tho / Thi);
+  const sGenCold = cold.mdot * cold.cp * Math.log(Tco / Tci);
+  const sGen = sGenHot + sGenCold;
+
+  const Tlm = Math.abs(Thi - Tho) < 1e-6
+    ? Thi
+    : (Thi - Tho) / Math.log(Thi / Tho);
+
+  const exergySupplied  = (Tlm > T0 && perf.Q > 0)
+    ? perf.Q * (1 - T0 / Tlm)
+    : 0;
+  const exergyDestroyed = T0 * sGen;
+
+  const etaII = exergySupplied > 1e-9
+    ? Math.max(0, Math.min(1, 1 - exergyDestroyed / exergySupplied))
+    : 0;
+
+  const minStream = perf.cHot <= perf.cCold ? hot : cold;
+  const Ns = minStream.mdot > 0
+    ? sGen / (minStream.mdot * minStream.cp)
+    : 0;
+
+  return {
+    T0_c, sGenHot, sGenCold, sGen,
+    exergyDestroyed, exergySupplied, etaII, Ns,
+  };
+}

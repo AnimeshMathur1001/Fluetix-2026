@@ -7,6 +7,11 @@ import SectionTitle from '../ui/SectionTitle';
 import ActionButton from '../ui/ActionButton';
 import { useAppStore } from '../../store/useAppStore';
 import { usePhysics } from '../../hooks/usePhysics';
+import { computeExergy } from '../../lib/physics';
+import {
+  tpmsMinCurvatureRadius,
+  estimateBurstPressure,
+} from '../../lib/solidProperties';
 import { buildReport } from '../../lib/report';
 import { downloadText, toCSV } from '../../lib/exporters';
 import { fetchReportPdf } from '../../lib/api';
@@ -18,6 +23,16 @@ import type { ClipAxis, FieldName, RegionKey } from '../../lib/types';
 export default function ResultsPanel() {
   const s = useAppStore();
   const { performance: perf, scaleUp, effectiveTurbulence } = usePhysics();
+
+  const exergy = perf.Q > 0 ? computeExergy(perf, s.hot, s.cold, s.deadStateT) : null;
+
+  const burstPressure = (() => {
+    const mat      = s.solid.mat;
+    const surface  = s.surface;
+    const cellMin  = Math.min(s.cellX, s.cellY, s.cellZ);
+    const thickness = s.thickness;
+    return estimateBurstPressure(mat, surface, cellMin, thickness);
+  })();
 
   // Same recipe RegionsPanel uses — real checks against the actual generated
   // geometry, not re-derived here, just relayed into the report request.
@@ -209,6 +224,80 @@ export default function ResultsPanel() {
         unit={tempUnitLabel(s.tempUnit)}
       />
 
+      {exergy && (
+        <>
+          <SectionTitle className="mt-4">
+            Second-Law Performance
+          </SectionTitle>
+          <MetricRow
+            divider
+            label="Exergy destruction"
+            value={formatNumber(exergy.exergyDestroyed, 3)}
+            unit="W"
+          />
+          <MetricRow
+            divider
+            label="Second-law effectiveness"
+            value={(exergy.etaII * 100).toFixed(2)}
+            unit="%"
+            valueClassName="text-accent"
+          />
+          <MetricRow
+            divider
+            label="Entropy generation"
+            value={formatNumber(exergy.sGen * 1000, 4)}
+            unit="mW/K"
+          />
+          <MetricRow
+            divider
+            label="Entropy gen. number N_s"
+            value={exergy.Ns.toFixed(5)}
+            unit="—"
+          />
+          <div className="mt-2 flex items-center gap-2
+                          text-smx">
+            <span className="text-dim">Reference T₀</span>
+            <input
+              type="number"
+              className="w-16 rounded bg-surface2 px-2 py-0.5
+                         text-smx text-base1 border border-border
+                         focus:outline-none focus:border-accent"
+              value={s.deadStateT}
+              min={-50}
+              max={50}
+              step={1}
+              onChange={(e) =>
+                s.setDeadStateT(Number(e.target.value))
+              }
+            />
+            <span className="text-dim">°C</span>
+          </div>
+        </>
+      )}
+
+      {burstPressure && (
+        <>
+          <SectionTitle className="mt-4">
+            Structural Screening
+          </SectionTitle>
+          <MetricRow
+            divider
+            label="Est. burst pressure"
+            value={burstPressure.burstBar.toFixed(0)}
+            unit="bar"
+          />
+          <MetricRow
+            divider
+            label="Est. burst pressure"
+            value={burstPressure.burstMPa.toFixed(1)}
+            unit="MPa"
+          />
+          <div className="mt-1 text-smx text-dim">
+            Thin-shell estimate · SF {burstPressure.safetyFactor} on yield · screen only · verify with FEA
+          </div>
+        </>
+      )}
+
       <div
         className={cn(
           'my-3.5 rounded-md border p-2.5',
@@ -285,6 +374,7 @@ export default function ResultsPanel() {
                 faces: s.faces, hot: s.hot, cold: s.cold, solid: s.solid, flow: s.flow,
                 mesh: s.mesh,
                 residuals: s.residuals,
+                residualTarget: Number.parseFloat(s.residualTarget),
                 iteration: s.iteration,
                 converged: s.converged,
                 meshIndependence: s.meshIndependence.results.length > 0 ? s.meshIndependence.results : null,

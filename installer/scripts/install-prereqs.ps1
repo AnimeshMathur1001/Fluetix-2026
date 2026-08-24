@@ -78,7 +78,36 @@ if (-not $pythonExe) {
     Write-Step "Python already present: $pythonExe"
 }
 
-# --- 2. GTK3 runtime (required by WeasyPrint for PDF report generation) ----
+# --- 2. Microsoft Edge WebView2 Runtime (required for the native desktop --
+# window — backend/app/webview_window.py has no fallback if this is
+# missing, unlike the GTK3/PDF case below). Present out of the box on
+# most current Windows 10/11 installs, but not guaranteed on older
+# builds, LTSC editions, or machines with Windows Update locked down.
+function Test-WebView2Present {
+    $clientId = '{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}'
+    $regPaths = @(
+        "HKLM:\SOFTWARE\Microsoft\EdgeUpdate\Clients\$clientId",
+        "HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\$clientId",
+        "HKCU:\SOFTWARE\Microsoft\EdgeUpdate\Clients\$clientId"
+    )
+    foreach ($path in $regPaths) {
+        $key = Get-ItemProperty -Path $path -Name 'pv' -ErrorAction SilentlyContinue
+        if ($key -and $key.pv -and $key.pv -ne '0.0.0.0') { return $true }
+    }
+    return $false
+}
+
+if (Test-WebView2Present) {
+    Write-Step "Microsoft Edge WebView2 Runtime already present"
+} else {
+    Write-Step "Microsoft Edge WebView2 Runtime not found - installing via winget (required for Fluetix's app window to open)"
+    winget install --id Microsoft.EdgeWebView2Runtime -e --silent --disable-interactivity --accept-source-agreements --accept-package-agreements
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Warning: WebView2 Runtime installation via winget failed (exit code $LASTEXITCODE). Fluetix's app window will not open without it - install it manually from https://developer.microsoft.com/microsoft-edge/webview2/ and re-run this installer." -ForegroundColor Yellow
+    }
+}
+
+# --- 3. GTK3 runtime (required by WeasyPrint for PDF report generation) ----
 # Downloaded and run directly with its own NSIS silent switch (/S) rather
 # than through "winget install" -- winget's --silent flag only suppresses
 # winget's own prompts, not this specific package's installer UI, which
@@ -131,7 +160,7 @@ if (Test-GtkPresent) {
     }
 }
 
-# --- 3. Private virtual environment + Python packages -----------------------
+# --- 4. Private virtual environment + Python packages -----------------------
 Write-Step "Creating a private Python environment for Fluetix"
 $venvDir = Join-Path $AppDir 'venv'
 if (Test-Path $venvDir) { Remove-Item -Recurse -Force $venvDir }

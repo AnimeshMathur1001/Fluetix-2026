@@ -82,3 +82,68 @@ export function evaluateSolid(mat: string, tempC: number): { k: number; cp: numb
   const table = TABLES[mat];
   return table ? interp(table, tempC) : null;
 }
+
+export const YIELD_STRENGTH_MPa: Record<string, number> = {
+  alsi10mg: 230,
+  ti64:    1000,
+  ss316:    450,
+  cucrzr:   300,
+  in718:   1000,
+};
+
+const _BURST_SF = 2.0;
+
+const _CURVATURE_FACTOR: Record<string, number> = {
+  gyroid:  2 * Math.PI,
+  schwarzp: 2 * Math.PI * 0.9,
+  diamond:  2 * Math.PI * 0.8,
+  iwp:      2 * Math.PI * 1.2,
+};
+
+export function tpmsMinCurvatureRadius(
+  surface: string,
+  cellSizeMm: number,
+): number {
+  const denom = _CURVATURE_FACTOR[surface] ?? (2 * Math.PI);
+  return cellSizeMm / denom;
+}
+
+export interface BurstPressureResult {
+  mat: string;
+  yieldMPa: number;
+  safetyFactor: number;
+  thicknessMm: number;
+  rMinMm: number;
+  burstPa: number;
+  burstBar: number;
+  burstMPa: number;
+}
+
+export function estimateBurstPressure(
+  mat: string,
+  surface: string,
+  cellSizeMm: number,
+  thicknessMm: number,
+): BurstPressureResult | null {
+  const sigmaY = YIELD_STRENGTH_MPa[mat];
+  if (sigmaY == null || thicknessMm <= 0) return null;
+
+  const rMin = tpmsMinCurvatureRadius(surface, cellSizeMm);
+  if (rMin <= 0) return null;
+
+  const sigmaPa = sigmaY * 1e6;
+  const tM      = thicknessMm / 1000;
+  const rM      = rMin / 1000;
+  const pPa     = (2 * sigmaPa * tM) / (rM * _BURST_SF);
+
+  return {
+    mat,
+    yieldMPa:     sigmaY,
+    safetyFactor: _BURST_SF,
+    thicknessMm,
+    rMinMm:       Math.round(rMin * 10000) / 10000,
+    burstPa:      pPa,
+    burstBar:     pPa / 1e5,
+    burstMPa:     pPa / 1e6,
+  };
+}

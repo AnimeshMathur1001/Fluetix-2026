@@ -72,7 +72,7 @@ def _region_geometry(req: dict) -> dict[str, dict]:
 
 
 def _analytical_performance(req: dict, solid_stats: dict, nu_correction: dict) -> dict:
-    return physics.compute_performance(
+    perf = physics.compute_performance(
         cell=(req["cellX"], req["cellY"], req["cellZ"]),
         cells=(req["nx"], req["ny"], req["nz"]),
         thickness=req["thickness"],
@@ -84,6 +84,24 @@ def _analytical_performance(req: dict, solid_stats: dict, nu_correction: dict) -
         flow=req["flow"],
         nu_correction=nu_correction,
     )
+
+    from .physics import compute_exergy
+    from .solid_properties import estimate_burst_pressure
+
+    exergy = compute_exergy(perf, req["hot"], req["cold"],
+                            T0_c=25.0)
+
+    cell_min = min(req["cellX"], req["cellY"], req["cellZ"])
+    burst = estimate_burst_pressure(
+        req.get("solid", {}).get("mat", ""),
+        req.get("surface", "gyroid"),
+        cell_min,
+        req["thickness"],
+    )
+
+    perf["exergy"] = exergy
+    perf["burst"] = burst
+    return perf
 
 
 def _solved_section(case_dir: Path | None, req: dict, geometry: dict[str, dict]) -> dict | None:
@@ -124,7 +142,7 @@ def build_report_pdf(req: dict, case_dir: Path | None) -> bytes:
 
     residual_chart = None
     if req.get("residuals"):
-        target = 1e-4
+        target = req.get("residualTarget") or 1e-4
         residual_chart = render_residual_chart(req["residuals"], target)
 
     property_plots = {
@@ -454,6 +472,83 @@ Source: {{ nu_correction.sourceNote }}.</div>
   <tr><td>Heat duty Q</td><td class="num">{{ "%.2f"|format(analytical.Q) }} W</td></tr>
   <tr><td>Energy imbalance</td><td class="num">{{ "%.2f"|format(analytical.imbalance) }} %</td></tr>
 </table>
+
+{% if analytical.exergy %}
+<h3>Second-Law Performance</h3>
+<table>
+  <tr><th>Metric</th><th class="num">Value</th></tr>
+  <tr>
+    <td>Exergy destruction</td>
+    <td class="num">
+      {{ "%.4f"|format(analytical.exergy.exergyDestroyed) }} W
+    </td>
+  </tr>
+  <tr>
+    <td>Second-law effectiveness &eta;<sub>II</sub></td>
+    <td class="num">
+      {{ "%.2f"|format(analytical.exergy.etaII * 100) }} %
+    </td>
+  </tr>
+  <tr>
+    <td>Entropy generation rate</td>
+    <td class="num">
+      {{ "%.6f"|format(analytical.exergy.sGen) }} W/K
+    </td>
+  </tr>
+  <tr>
+    <td>Entropy generation number N<sub>s</sub></td>
+    <td class="num">
+      {{ "%.6f"|format(analytical.exergy.Ns) }}
+    </td>
+  </tr>
+  <tr>
+    <td>Reference temperature T&#8320;</td>
+    <td class="num">{{ "%.0f"|format(analytical.exergy.T0_c) }} &deg;C</td>
+  </tr>
+</table>
+{% endif %}
+
+{% if analytical.burst %}
+<h3>Structural Screening</h3>
+<div class="note">
+  Thin-shell estimate only &mdash; verify with FEA before
+  fabrication. Safety factor {{ analytical.burst.safetyFactor }}
+  applied to material yield strength.
+</div>
+<table>
+  <tr><th>Parameter</th><th class="num">Value</th></tr>
+  <tr>
+    <td>Material</td>
+    <td class="num">{{ analytical.burst.mat }}</td>
+  </tr>
+  <tr>
+    <td>Yield strength</td>
+    <td class="num">
+      {{ "%.0f"|format(analytical.burst.yieldMPa) }} MPa
+    </td>
+  </tr>
+  <tr>
+    <td>Wall thickness</td>
+    <td class="num">
+      {{ "%.2f"|format(analytical.burst.thicknessMm) }} mm
+    </td>
+  </tr>
+  <tr>
+    <td>Min. curvature radius R<sub>min</sub></td>
+    <td class="num">
+      {{ "%.3f"|format(analytical.burst.rMinMm) }} mm
+    </td>
+  </tr>
+  <tr>
+    <td>Estimated burst pressure</td>
+    <td class="num">
+      {{ "%.0f"|format(analytical.burst.burstBar) }} bar
+      &nbsp;/&nbsp;
+      {{ "%.1f"|format(analytical.burst.burstMPa) }} MPa
+    </td>
+  </tr>
+</table>
+{% endif %}
 
 {% if manufacturability %}
 <div class="pagebreak"></div>

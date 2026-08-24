@@ -123,6 +123,8 @@ export interface AppState {
   customSolids: Record<string, CustomSolid>;
   nuCorrection: NuCorrectionParams;
   setNuCorrection: (params: NuCorrectionParams) => void;
+  deadStateT: number;
+  setDeadStateT: (t: number) => void;
 
   /* phase 4 — mesh & solve */
   bgCells: number;
@@ -326,6 +328,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     b: 0.50,
     sourceNote: 'Default – edit A and b to match your geometry',
   },
+  deadStateT: 25,
 
   bgCells: 24,
   refine: 2,
@@ -527,6 +530,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   setNuCorrection: (params) => set({ nuCorrection: params }),
+
+  setDeadStateT: (t) => set({ deadStateT: t }),
 
   setFace: (face, role) => {
     const faces = { ...get().faces, [face]: role };
