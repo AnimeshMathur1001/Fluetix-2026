@@ -75,7 +75,9 @@ export default function ResultsPanel() {
       {s.backendPerformance && s.backendPerformance.imbalance > 5 && (
         <div className="mb-3 rounded border border-warn/40 bg-warn/10 px-3 py-2 text-smx text-warn">
           CFD energy imbalance {s.backendPerformance.imbalance.toFixed(1)} % – the solid region has
-          not fully converged. Run more iterations before treating these results as final.
+          not fully converged. Two possible causes: not enough iterations, or too few mesh cells
+          spanning the wall thickness (check the background-cells recommendation on Mesh & Solve).
+          If more iterations don't reduce the imbalance, resolution is the more likely cause.
         </div>
       )}
 

@@ -651,9 +651,11 @@ disclosed approximation.</div>
   <tr><td>Effectiveness &epsilon;</td><td class="num">{{ "%.4f"|format(solved.performance.effectiveness) }}</td></tr>
   <tr><td>Solid temperature range</td><td class="num">{{ "%.2f"|format(solved.performance.solidTminC) }} – {{ "%.2f"|format(solved.performance.solidTmaxC) }} &deg;C</td></tr>
 </table>
-<div class="note">A high energy imbalance or a narrow solid temperature range usually means the solve has
-not run enough iterations – the solid region's own energy equation settles far slower than the fluid
-side. Not evidence of a modelling error by itself.</div>
+<div class="note">A high energy imbalance or a narrow solid temperature range can mean the solve has not
+run enough iterations – the solid region's own energy equation settles far slower than the fluid
+side – but it can equally mean too few mesh cells span the wall thickness, which more iterations
+will not fix. If imbalance stays high across a range of iteration counts, check mesh resolution
+(background cells) before suspecting the model itself.</div>
 
 <h3>Analytical vs. solved – side by side</h3>
 <div class="note">Per this report's reading guide: a real gap here is worth investigating, not averaging

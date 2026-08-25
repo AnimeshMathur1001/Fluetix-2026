@@ -236,14 +236,14 @@
       }
       .fx-splash-credit-sub {
         margin: 7px auto 0;
-        max-width: min(80vw, 440px);
+        max-width: none;
         color: #64758d;
         font-family: Arial, Helvetica, sans-serif;
-        font-size: clamp(9px, 0.85vw, 12px);
+        font-size: clamp(11px, 1.3vw, 17px);
         line-height: 1.4;
         font-weight: 400;
         letter-spacing: 0.04em;
-        white-space: normal;
+        white-space: nowrap;
       }
       @keyframes fx-splash-textBlockIn {
         0% { opacity: 0; transform: translateY(14px); filter: blur(7px); }
@@ -255,7 +255,7 @@
         .fx-splash-text-block { margin-top: 18px; }
         .fx-splash-wordmark { font-size: clamp(27px, 8vw, 40px); }
         .fx-splash-credit { font-size: 10px; letter-spacing: 0.2em; text-indent: 0.2em; }
-        .fx-splash-credit-sub { font-size: 9px; max-width: 86vw; margin-top: 6px; }
+        .fx-splash-credit-sub { font-size: 9px; max-width: none; white-space: nowrap; margin-top: 6px; }
       }
     </style>
   </head>
@@ -273,7 +273,7 @@
       </div>
       <div class="fx-splash-text-block">
         <div class="fx-splash-wordmark">FLUETIX</div>
-        <div class="fx-splash-credit">MADE BY ANIMESH</div>
+        <div class="fx-splash-credit">MADE BY ANIMESH MATHUR</div>
         <div class="fx-splash-credit-sub">Co-developed by Arihant Kumar Singh and Aviral Gupta</div>
       </div>
       <div class="fx-splash-flash"></div>
@@ -410,7 +410,7 @@
         setTimeout(function () {
           minTimeElapsed = true;
           tryHide();
-        }, 2600);
+        }, 5000);
 
         var observer = new MutationObserver(function () {
           if (root.childElementCount > 0) {

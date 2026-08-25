@@ -324,14 +324,12 @@ export default function MeshSolvePanel() {
           </div>
         ) : null}
 
-        {s.meshIndependence.gciRows?.some(r => r.gci) && (
+        {s.meshIndependence.gciRows && s.meshIndependence.gciRows.length > 0 && (
           <div className="mt-4">
             <div className="mb-2 text-smx font-semibold text-ink">
               Grid Convergence Index
             </div>
-            {s.meshIndependence.gciRows
-              .filter(r => r.gci !== null)
-              .map(r => (
+            {s.meshIndependence.gciRows.map(r => (
                 <div
                   key={r.metric}
                   className="mb-3 rounded bg-card p-3 text-smx"
@@ -339,32 +337,42 @@ export default function MeshSolvePanel() {
                   <div className="mb-1 font-medium text-ink">
                     {r.metric}
                   </div>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-dim">
-                    <span>Observed order p</span>
-                    <span className="text-ink">
-                      {r.gci!.observedOrder.toFixed(2)}
-                    </span>
-                    <span>Richardson extrapolated</span>
-                    <span className="text-ink">
-                      {r.gci!.richardsonExtrapolated.toFixed(4)}
-                    </span>
-                    <span>GCI fine grid</span>
-                    <span className={
-                      r.gci!.converged
-                        ? 'font-semibold text-ok'
-                        : 'font-semibold text-warn'
-                    }>
-                      {r.gci!.gciFineGridPct.toFixed(2)} %
-                      {r.gci!.converged
-                        ? ' – mesh independent'
-                        : ' – refine further'}
-                    </span>
-                    <span>Refinement ratios</span>
-                    <span className="text-ink">
-                      r21 = {r.gci!.r21.toFixed(2)},
-                      r32 = {r.gci!.r32.toFixed(2)}
-                    </span>
-                  </div>
+                  {r.gci ? (
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-dim">
+                      <span>Observed order p</span>
+                      <span className="text-ink">
+                        {r.gci.observedOrder.toFixed(2)}
+                      </span>
+                      <span>Richardson extrapolated</span>
+                      <span className="text-ink">
+                        {r.gci.richardsonExtrapolated.toFixed(4)}
+                      </span>
+                      <span>GCI fine grid</span>
+                      <span className={
+                        r.gci.converged
+                          ? 'font-semibold text-ok'
+                          : 'font-semibold text-warn'
+                      }>
+                        {r.gci.gciFineGridPct.toFixed(2)} %
+                        {r.gci.converged
+                          ? ' – mesh independent'
+                          : ' – refine further'}
+                      </span>
+                      <span>Refinement ratios</span>
+                      <span className="text-ink">
+                        r21 = {r.gci.r21.toFixed(2)},
+                        r32 = {r.gci.r32.toFixed(2)}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="text-dim">
+                      Did not converge monotonically across the three mesh
+                      levels – Richardson extrapolation (and therefore GCI)
+                      is undefined for this metric. Try a different level
+                      spacing, or treat this metric as unresolved at these
+                      resolutions.
+                    </div>
+                  )}
                 </div>
               ))}
             <div className="mt-1 text-xs text-dim">
